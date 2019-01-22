@@ -22,4 +22,4 @@ files = list.files(path=rawdir, pattern='.fastq', full.names=T)
 
 # generating report
 qual = rqcQA(files, workers=threads)
-rqcReport(qual, outdir = "firstqcdir", file = "raw-quality-Rqc")
+rqcReport(qual, outdir = firstqcdir, file = "raw-quality-Rqc")

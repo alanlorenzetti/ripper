@@ -191,8 +191,9 @@ if [ ! -e /opt/Trimmomatic-0.36/trimmomatic-0.36.jar ] ; then echo >&2 "trimmoma
 # checking R packages
 rpackages="Rqc gplots MSG VennDiagram ggplot2"
 
-for i in rpackages ; do
-    R --slave -e --args 'args=commandArgs(trailingOnly=TRUE); if(!require(args[1], quietly=T)){quit(save="no", status=1)}else{quit(save="no", status=0)}'
+for i in $rpackages ; do
+    R --slave -e 'args=commandArgs(trailingOnly=T); if(!require(args[1], quietly=T, character.only=T)){quit(save="no", status=1)}else{quit(save="no", status=0)}' \
+      --args $i > /dev/null 2>&1
     if [ $? == 1 ] ; then echo >&2 "$i R package is not installed. Aborting" ; exit 1 ; fi
 done
 
@@ -287,8 +288,8 @@ if [ ! -d $samdir ] ; then
     ## aligning to genome
     for i in $trimmeddir/*.fastq.gz ; do
         prefix=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/.fastq.gz$//")
-        out=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq$/sam/")
-        log=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq$/log/")
+        out=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq.gz$/sam/")
+        log=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq.gz$/log/")
         hisat2 --no-spliced-alignment \
                        --no-softclip \
                --rdg 1000,1 \
