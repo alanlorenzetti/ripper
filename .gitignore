@@ -4,6 +4,9 @@ addCommitPush.sh
 # temp dev file
 frtc-working-on-parallel-not-ready.sh
 
+# misc dir
+misc
+
 # OS generated files #
 ######################
 .DS_Store
