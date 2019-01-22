@@ -177,7 +177,7 @@ echo "Call: $0 $@"
 ####################################
 
 # list of program dependencies
-dependencies="curl bedtools R infoseq hisat2 samtools mmr circos"
+dependencies="curl bedtools R infoseq hisat2 samtools mmr circos infoseq"
 
 echo "Checking dependencies..."
 
@@ -187,6 +187,14 @@ for i in $dependencies ; do
 done 
 
 if [ ! -e /opt/Trimmomatic-0.36/trimmomatic-0.36.jar ] ; then echo >&2 "trimmomatic isn't installed. Aborting" ; exit 1; fi
+
+# checking R packages
+rpackages="Rqc gplots MSG VennDiagram ggplot2"
+
+for i in rpackages ; do
+    R --slave -e --args 'args=commandArgs(trailingOnly=TRUE); if(!require(args[1], quietly=T)){quit(save="no", status=1)}else{quit(save="no", status=0)}'
+    if [ $? == 1 ] ; then echo >&2 "$i R package is not installed. Aborting" ; exit 1 ; fi
+done
 
 # checking files
 if [ ! -e $miscdir/adap.fa ] ; then echo >&2 "Adapter sequences not found. Aborting" ; exit 1 ; fi
@@ -218,7 +226,7 @@ echo "Done!"
 if [ ! -d $firstqcdir ] ; then
     echo "First round of quality control"
     mkdir $firstqcdir
-    R -q -f $scriptsdir/1stQC.R --args $threads > /dev/null 2>&1
+    R -q -f $scriptsdir/1stQC.R --args $threads $firstqcdir $rawdir > /dev/null 2>&1
 
     echo "Done!"
 fi
@@ -246,7 +254,7 @@ fi
 if [ ! -d $secondqcdir ] ; then
     echo "Second round of quality control"
     mkdir $secondqcdir
-    R -q -f $scriptsdir/2ndQC.R --args $threads > /dev/null 2>&1
+    R -q -f $scriptsdir/2ndQC.R --args $threads $secondqcdir $trimmeddir > /dev/null 2>&1
 
     echo "Done!"
 fi
@@ -638,12 +646,12 @@ if [ "$positionAnalysis" == "y" ] ; then
         done
 
         # generating heatmaps for lsm position
-        R --slave -q -f $scriptsdir/lsm-position.R --args $spp > /dev/null 2>&1
+        R --slave -q -f $scriptsdir/lsm-position.R --args $spp $miscdir $positionanalysisdir > /dev/null 2>&1
     fi
 
     if [ ! -d $positionanalysisgenesdir ] ; then
         mkdir $positionanalysisgenesdir
-        bash $scriptsdir/check-genes-with-lsm.sh $spp $annotURL
+        bash $scriptsdir/check-genes-with-lsm.sh $spp $annotURL $miscdir $scriptsdir $positionanalysisgenesdir
     fi
 fi
 
@@ -653,7 +661,7 @@ fi
 if [ ! -d $gccontentdir ] ; then
     echo "Computing GC content"
     mkdir $gccontentdir
-    bash $scriptsdir/computeGC.sh $miscdir/$spp.fa $windowsize $stepsize
+    bash $scriptsdir/computeGC.sh $miscdir $windowsize $stepsize $gccontentdir
 fi
 
 ####################################
@@ -662,7 +670,7 @@ fi
 if [ ! -d $correlationanalysisdir ] ; then
     echo "Performing correlation analysis"
     mkdir $correlationanalysisdir
-    R --slave -q -f $scriptsdir/correlationAnalysis.R --args $windowsize $stepsize $threshold > /dev/null 2>&1
+    R --slave -q -f $scriptsdir/correlationAnalysis.R --args $windowsize $stepsize $threshold $gccontentdir $covdir $correlationanalysisdir > /dev/null 2>&1
 fi
 
 ####################################
@@ -671,7 +679,7 @@ fi
 if [ ! -d $circosdir ] ; then
     echo "Generating Circos Ideograms"
     mkdir $circosdir
-    bash $scriptsdir/createCircosFiles.sh $spp $positionAnalysis
+    bash $scriptsdir/createCircosFiles.sh $spp $positionAnalysis $miscdir $circosdir
     
     infoseq -only -name -length $miscdir/$spp.fa 2> /dev/null | tail -n +2 |\
     while read replicon length ; do
@@ -773,9 +781,18 @@ trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar
 hisat2 v1.1.2 @ PATH
 samtools v1.3.1 @ PATH
 bedtools v2.21.0 @ PATH
-R @ PATH ; also it has many library dependencies that should be installed automatically
 MMR default version @ PATH
 circos v0.69-6 @ PATH
+emboss v6.6.0.0
+R @ PATH (please, check the required packages below)
+
+R packages: 
+
+Rqc (BioConductor)
+gplots (CRAN)
+MSG (CRAN)
+VennDiagram (CRAN)
+ggplot2 (CRAN)
 
 files:
 

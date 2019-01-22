@@ -18,6 +18,10 @@
 # getting args
 args = commandArgs(trailingOnly=TRUE)
 
+spp=args[1]
+miscdir=args[2]
+positionanalysisdir=args[3]
+
 # libs
 if(!require("gplots")){install.packages("gplots", repos="https://vps.fmvz.usp.br/CRAN/"); library("gplots")}
 if(!require("MSG")){install.packages("MSG", repos="https://vps.fmvz.usp.br/CRAN/"); library("MSG")}
@@ -48,7 +52,7 @@ if(file.size("interaction-regions-fwd.gff3") == 0 & file.size("interaction-regio
 }
 
 ## loading ISSaga gff3
-IS = read.delim(paste0("misc/", args[1],"-ISSaga-checked.gff3"), header=FALSE, row.names = NULL)
+IS = read.delim(paste0(miscdir, "/", spp,"-ISSaga-checked.gff3"), header=FALSE, row.names = NULL)
 
 # subsetting mobile_elements
 IS = IS[IS[,3] == "mobile_element",]; rownames(IS) = NULL
@@ -160,7 +164,7 @@ colnames(results) = c("chr", "start", "end", "strand", "name", "family",
 results[,7:16] = (results[,7:16] >= 1) * 1
 
 # writing results to table
-write.csv(results, file = "positionAnalysis/results.txt", quote = FALSE, row.names = FALSE)
+write.csv(results, file = paste0(positionanalysisdir, "/results.txt", quote = FALSE, row.names = FALSE)
 
 ## This block for redundant names
 
@@ -178,7 +182,7 @@ col = vec2col(x, name = "Spectral")
 # plotting heatmap
 M = as.matrix(M)
 
-svg("positionAnalysis/redundantIS.svg", width = 8.267, height = 11.692)
+svg(paste0(positionanalysisdir, "/redundantIS.svg", width = 8.267, height = 11.692)
 heatmap.2(M,
           scale="none",
           trace = "none",
@@ -215,7 +219,7 @@ col = vec2col(x, name = "Spectral")
 
 # plotting heatmap
 MM = as.matrix(MM)
-svg("positionAnalysis/nonredundantIS.svg", width = 8.267, height = 11.692)
+svg(paste0(positionanalysisdir, "/nonredundantIS.svg", width = 8.267, height = 11.692)
 heatmap.2(MM,
           scale="none",
           trace = "none",

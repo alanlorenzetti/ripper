@@ -2,7 +2,7 @@
 
 ## Purpose and General Information
 
-This script will perform every task to analyze prokaryotic RIP-Seq/CLIP-Seq Illumina data.
+This script will perform every task to analyze prokaryotic RIP-Seq/HITS-CLIP Illumina data.
 
 ```
                                      __..--"".          .""--..__             

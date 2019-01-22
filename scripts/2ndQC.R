@@ -1,13 +1,11 @@
 # retrieving variables from command line
 args = commandArgs(trailingOnly=TRUE)
 threads = args[1]
+secondqcdir = args[2]
+trimmeddir = args[3]
 
 # loading Rqc
-if(!require('Rqc')){
-	source('https://bioconductor.org/biocLite.R')
-	biocLite('Rqc')
-	library('Rqc')	
-}
+library("Rqc")
 
 # workaround
 .readFrequency <- function (chunk)
@@ -20,8 +18,8 @@ if(!require('Rqc')){
 assignInNamespace(".readFrequency", .readFrequency, "Rqc")
 
 # listing files
-files = list.files(path='trimmed', pattern='.fastq', full.names=T)
+files = list.files(path=trimmeddir, pattern='.fastq', full.names=T)
 
 # generating report
 qual = rqcQA(files, workers=threads)
-rqcReport(qual, outdir = "2ndQC", file = "trimmed-quality-Rqc")
+rqcReport(qual, outdir = secondqcdir, file = "trimmed-quality-Rqc")

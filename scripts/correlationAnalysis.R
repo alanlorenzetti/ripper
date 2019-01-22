@@ -6,13 +6,16 @@ args = commandArgs(trailingOnly=TRUE)
 windowsize = args[1]
 stepsize = args[2]
 lfc = args[3]
+gccontentdir = args[4]
+covdir = args[5]
+correlationanalysisdir = args[6]
 
 # loading libs
 # ggplot2
 if(!require("ggplot2")){install.packages("ggplot2", repos="https://vps.fmvz.usp.br/CRAN/"); library("ggplot2")}
 
 # getting AT content
-gc = read.delim("gccontent/gccontent.txt", header=FALSE)
+gc = read.delim(paste0(gccontentdir, "/gccontent.txt", header=FALSE)
 at = gc
 at[,4] = 1 - at[,4]
 at[,1] = factor(at[,1], levels=unique(at[,1]))
@@ -21,8 +24,8 @@ meandf=aggregate(at[,4]~at[,1], FUN=mean)
 colnames(meandf) = c("V1", "meanAT")
 
 # getting LSm density
-lsmfwd = read.delim("cov/rip-counts-fwd-normalized-ggb-log2FC.txt", header=FALSE)
-lsmrev = read.delim("cov/rip-counts-rev-normalized-ggb-log2FC.txt", header=FALSE)
+lsmfwd = read.delim(paste0(covdir, "/rip-counts-fwd-normalized-ggb-log2FC.txt", header=FALSE)
+lsmrev = read.delim(paste0(covdir, "/rip-counts-rev-normalized-ggb-log2FC.txt", header=FALSE)
 lsm = lsmfwd
 lsm[,4] = ((lsmfwd[,4] >= lfc) * 1) + ((lsmrev[,4] >= lfc) * 1)
 lsm[,4] = (lsm[,4] >= 1) * 1
@@ -51,7 +54,7 @@ for(i in 1:length(indexes)){
 }
 
 # writing lsm density file
-write.table(lsmMean, "correlationAnalysis/lsmDensity.txt", row.names=F, col.names=F, quote=F, sep="\t")
+write.table(lsmMean, paste0(correlationanalysisdir, "/lsmDensity.txt", row.names=F, col.names=F, quote=F, sep="\t")
 
 # joining AT content with lsm density
 at[,5] = lsmMean[,4]
@@ -77,18 +80,18 @@ scatterPlot = function(df){
     theme_bw()
 }
 
-png("correlationAnalysis/scatterPlot.png", width=600, height=300)
+png(paste0(correlationanalysisdir, "/scatterPlot.png", width=600, height=300)
 scatterPlot(at)
 dev.off()
 
-svg("correlationAnalysis/scatterPlot.svg", width=10, height=4)
+svg(paste0(correlationanalysisdir, "/scatterPlot.svg", width=10, height=4)
 scatterPlot(at)
 dev.off()
 
 for(i in 1:length(indexes)){
 	atsub = subset(at, V1 == names(indexes[i]))
 	corTest = cor.test(atsub[,4], atsub[,5], method="spearman", alternative="greater")
-	filename = paste0("correlationAnalysis/", sub(".[0-9]$", "", names(indexes[i])), "-correlationTest.txt")
+	filename = paste0(correlationanalysisdir, sub(".[0-9]$", "", names(indexes[i])), "-correlationTest.txt")
 	write(capture.output(corTest), filename)
 }
 

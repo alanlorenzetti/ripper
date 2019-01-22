@@ -5,19 +5,25 @@
 # require emboss
 # require bedtools
 
-# usage ./computeGC.sh <Genome> <window_size> <step_size>
+# usage ./computeGC.sh <spp> <miscdir> <window_size> <step_size> <gccontent_dir>
 # e.g ./computeGC.sh Hsalinarum.fa 50 50
 
+spp=$1
+miscdir=$2
+windowsize=$3
+stepsize=$4
+gccontentdir=$5
+
 # genome fasta file = $1
-infoseq -only -length -name $1 | tail -n +2 | sed "s/ \+/	/" > gtmp 2> /dev/null
+infoseq -only -length -name $miscdir/$spp.fa | tail -n +2 | sed "s/ \+/	/" > gtmp 2> /dev/null
 
 # creating windows
-bedtools makewindows -g gtmp -w $2 -s $3 > wtmp
+bedtools makewindows -g gtmp -w $windowsize -s $stepsize > wtmp
 
 # computing GC content
-bedtools nuc -fi $1 -bed wtmp |\
+bedtools nuc -fi $miscdir/$spp.fa -bed wtmp |\
 tail -n +2 |\
-awk -v OFS="\t" -v FS="\t" '{print $1, $2+1, $3, $5}' > gccontent/gccontent.txt
+awk -v OFS="\t" -v FS="\t" '{print $1, $2+1, $3, $5}' > $gccontentdir/gccontent.txt
 
 rm gtmp wtmp
 
@@ -39,7 +45,7 @@ rm tmp1
 
 tail -n +2 tmp2 |\
 while read replicon avggenomegc avgtxgc ; do
-	awk -v OFS="\t" -v replicon=$replicon -v avggenomegc=$avggenomegc '{if($1 == replicon){print $1,$2,$3,avggenomegc/100}}' gccontent/gccontent.txt
-done > gccontent/avggccontent.txt
+	awk -v OFS="\t" -v replicon=$replicon -v avggenomegc=$avggenomegc '{if($1 == replicon){print $1,$2,$3,avggenomegc/100}}' $gccontentdir/gccontent.txt
+done > $gccontentdir/avggccontent.txt
 
 rm tmp2

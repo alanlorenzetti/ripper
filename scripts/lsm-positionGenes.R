@@ -27,6 +27,7 @@
 
 # getting args
 args = commandArgs(trailingOnly=TRUE)
+positionanalysisgenesdir=args[3]
 
 # libs
 # gplots
@@ -66,7 +67,7 @@ genes = NULL
 
 # if results.csv exists
 # it will just skip the following analysis
-if(!file.exists("positionAnalysisGenes/results.csv")){
+if(!file.exists(paste0(positionanalysisgenesdir,"/results.csv")){
   
   # iterating over IS to find lsm interactions lying on it
   for(i in 1:dim(IS)[1]){
@@ -152,7 +153,7 @@ if(!file.exists("positionAnalysisGenes/results.csv")){
   
 # closing the conditional checking results.csv existence
 # it will load results.csv in case it exists
-}else{results = read.csv("positionAnalysisGenes/results.csv", header=TRUE)}
+}else{results = read.csv(paste0(positionanalysisgenesdir, "/results.csv", header=TRUE)}
 
 # transforming results table type; adding header to results
 results = as.data.frame(results)
@@ -162,7 +163,7 @@ colnames(results) = c("chr", "start", "end", "strand", "name",
                       "one_as", "two_as", "three_as", "four_as", "five_as")
 
 # writing results to table
-write.csv(results, file = "positionAnalysisGenes/results.csv", quote = FALSE, row.names = FALSE)
+write.csv(results, file = paste0(positionanalysisgenesdir, "/results.csv", quote = FALSE, row.names = FALSE)
 
 # creating a matrix to further analysis
 M = results[,6:15]
@@ -189,7 +190,7 @@ clust = hclust(dist, method = "ward.D")
 # plotting heatmap
 MM = as.matrix(MM)
 
-svg("positionAnalysisGenes/heatmap.svg", width = 10, height = 60)
+svgpaste0(positionanalysisgenesdir, "/heatmap.svg", width = 10, height = 60)
 heatmap.2(MM,
           scale="none",
           trace = "none",
@@ -216,18 +217,18 @@ dev.off()
 # genes with lsm interaction on sense strand
 filter = apply(results[,6:10], 1, sum) != 0
 genesWithLsmSense = as.character(results[filter,5])
-write.table(genesWithLsmSense, "positionAnalysisGenes/genesWithLsmSense.txt", sep = " ",
+write.table(genesWithLsmSense, paste0(positionanalysisgenesdir, "/genesWithLsmSense.txt", sep = " ",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # genes with lsm interaction on antisense strand
 filter = apply(results[,11:15], 1, sum) != 0
 genesWithLsmAntiSense = as.character(results[filter,5])
-write.table(genesWithLsmAntiSense, "positionAnalysisGenes/genesWithLsmAntiSense", sep = " ",
+write.table(genesWithLsmAntiSense, paste0(positionanalysisgenesdir, "/genesWithLsmAntiSense", sep = " ",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # drawing venn diagram
 vennInput=list(Sense=genesWithLsmSense, Antisense=genesWithLsmAntiSense)
-vennDiag = venn.diagram(vennInput, filename = "positionAnalysisGenes/vennDiagram.png", imagetype = "png",
+vennDiag = venn.diagram(vennInput, filename = paste0(positionanalysisgenesdir, "/vennDiagram.png", imagetype = "png",
                         fill=c(2,5), alpha=0.5, cex = 1.5)
 
 # genes with lsm interaction only on sense strand
