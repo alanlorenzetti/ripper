@@ -1,12 +1,10 @@
 #!/bin/bash
 
-####################
-# alorenzetti 201708
-####################
+# alorenzetti 
 
-####################
-# Brief description
-####################
+####################################
+# Ripper's brief description
+####################################
 # this script is the scaffold for running RIP-Seq analysis
 # and getting results about RNAs derived from Insertion Sequences and Genes
 # that interact with this protein in vivo
@@ -14,145 +12,108 @@
 # it relies on many scripts, files and programs, and therefore the setting up
 # is quite complicated. Nevertheless, the tool is aware of required files and
 # should not work before everything is set up
-#
-# alpha version 0.2
-####################
+####################################
 
-####################
-# Usage
-####################
-# ./workflow.sh <spp> <control_lib> <positionAnalysis> <threads> <genomeURL> <readsize> <strandspecific> <invertstrand> <additionalPlots> <windowsize> <stepsize> <log2fcthreshold> <minlength>
-# e.g.:
-# ./workflow.sh Hsalinarum control y 20 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
-#
-# if something goes wrong, one may remove all the directories and files created by this script by doing
-# rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circos
-#
-# brief description of every argument:
-#
-# <spp> [CHAR] prefix used by the script to read and write target files; I advise the use of species name
-# 	       for example: if spp=Hsalinarum, the bowtie indexes will be set as misc/Hsalinarum.1.ebwt;
-#	       by the same means, the IS annotation file should be misc/Hsalinarum-ISSaga-checked.gff3
-#
-# <control_lib> [CHAR] prefix used to read the control fastq file. for example raw/control.fastq
-#
-# <positionAnalysis> [y/n] flag indicating whether position analysis will be performed for IS and genes
-#		           don't use it if you doesn't have IS annotation files
-#
-# <threads> [INT] number of threads passed to R in quality control, trimmomatic, bowtie and mmr
-#
-# <genomeURL> [CHAR] URL to the NCBI RefSeq FTP; it's used to get the reference genome file and annotation file
-#
-# <readsize> [INT] mean read size passed to mmr
-#
-# <strandspecific> [y/n] flag indicating whether RNA-Seq data is stranded or not; required by mmr
-#
-# <invertstrand> [y/n] flag indicating whether RNA-Seq data is from dUTP libraries and should be inverted when
-#                      computing genome-wide read depth
-#
-# <additionalPlots> [y/n] flag indicating whether additional read depth plots should be created;
-#			  if additionalPlots = y, the program will create additional coverage files with
-#			  non-normalized counts and normalized log2 counts
-#
-# <windowsize> [INT] size of windows while computing genome AT content and RNA Binding Protein (RBP) density
-# 
-# <stepsize> [INT] size of step while computing genome AT content and RBP density
-#
-# <log2fcthreshold> [INT] threshold used to identify which regions interact with given RBP;
-#			  for example using log2fcthreshold = 2, means that the program will
-# 			  consider a base bound to RBP only if a position satisfies rip count/control count >= 4
-#
-# <minlength> [INT] minimum length of transcript fragments interacting with RBP;
-#		    for example, if minlength = 10, the program will create fragments only if there
-#		    are at least 10 consecutive bases satisfying log2fcthreshold
-####################
+version=0.3.0
+lastupdate=20190122
 
-####################
-# Required files and programs
-####################
-#
-# required programs:
-# trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar
-# bowtie v1.1.2 @ PATH
-# samtools v1.3.1 @ PATH
-# bedtools v2.21.0 @ PATH
-# R @ PATH ; also it has many library dependencies that should be installed automatically
-# MMR @ PATH
-# circos v0.69-6 @ PATH
-#
-# required files:
-# IS annotation contained in misc directory
-# scripts contained in misc directory
-# adap fasta adap.fa contained in misc directory
-# raw data (below) contained in the raw directory
-# rip fastq rip.fastq (single-end Illumina sequencing)
-# control fastq control.fastq (single-end Illumina sequencing)
-#
-# required directory structure and files
-#
-# _WORKINGDIRECTORY
-#	|
-#	|-- workflow.sh
-#	|-- _raw
-#	     |-- <control>.fastq
-#	     |-- rip.fastq
-#	|-- _misc
-#	     |-- 1stQC.R
-#	     |-- 2ndQC.R
-#	     |-- correlationAnalysis.R
-#	     |-- lsm-positionGenes.R
-#	     |-- lsm-position.R
-#	     |-- check-genes-with-lsm.sh
-#	     |-- computeGC.sh
-#	     |-- createCircosFiles.sh
-#	     |-- circos.conf
-#	     |-- <spp>-ISSaga-checked.gff3
-#	     |-- adap.fa
-#
-# several directories and files will be created during the execution and they will be placed
-# majorly in _WORKINGDIRECTORY and _misc
-####################
+# please, check the README.md file before using this script
+# there is also a version of the manual on the end of this file
+# which can be accessed using ./frtc.sh --help
 
-######################
-# checking dependencies
-######################
-echo >&2 "Checking dependencies"
+# starting an if statement to show the help
+# which is presented on the end of the file
+# this if statement only ends on the end of
+# this script
+if [ "$1" != "--help" ] ; then
 
-command -v bedtools > /dev/null >&1 || { echo >&2 "bedtools isn't installed. Aborting" ; exit 1; }
-command -v R > /dev/null >&1 || { echo >&2 "R isn't installed. Aborting" ; exit 1; }
-command -v infoseq > /dev/null >&1 || { echo >&2 "emboss isn't installed. Aborting" ; exit 1; }
-command -v bowtie > /dev/null >&1 || { echo >&2 "bowtie isn't installed. Aborting" ; exit 1; }
-command -v samtools > /dev/null >&1 || { echo >&2 "samtools isn't installed. Aborting" ; exit 1; }
-command -v mmr > /dev/null >&1 || { echo >&2 "mmr isn't installed. Aborting" ; exit 1; }
-command -v circos > /dev/null >&1 || { echo >&2 "circos isn't installed. Aborting" ; exit 1; }
-if [ ! -e /opt/Trimmomatic-0.36/trimmomatic-0.36.jar ] ; then echo >&2 "trimmomatic isn't installed. Aborting" ; exit 1; fi
+# showing usage hints if no arguments are supplied
+if [ $# -ne 13 ] ; then echo "
 
-# checking files
-if [ ! -e misc/adap.fa ] ; then echo >&2 "Adapter sequences not found. Aborting" ; exit 1 ; fi
-if [ ! -e raw/$2.fastq ] ; then echo >&2 "Control file not found. Aborting" ; exit 1 ; fi
+Ripper:
+A tool to process Illumina RIP-Seq/HITS-CLIP data.
+Version: $version
+Last update: $lastupdate
 
-if [ "$3" == "y" ] ; then
-	if [ ! -e misc/$1-ISSaga-checked.gff3 ] ; then echo >&2 "IS annotation not found. Aborting" ; exit 1 ; fi
+Usage:
+
+bash ripper.sh <spp> <control_lib> <positionAnalysis> <threads> <genomeURL> <readsize> <strandspecific> <invertstrand> <additionalPlots> <windowsize> <stepsize> <log2fcthreshold> <minlength>
+
+spp [VARCHAR]:               prefix used by the script to read and write target files.
+                             I advise the use of species name. e.g.: Hsalinarum
+                             the hisat2 indexes will be set as misc/Hsalinarum.1.ebwt .
+                             by the same means, the IS annotation file should be
+                             Hsalinarum-ISSaga-checked.gff3
+
+control_lib [VARCHAR]:       prefix used to read the control fastq file.
+                             e.g.: control
+
+positionAnalysis [VARCHAR]:  flag indicating whether position analysis will be performed
+                             for IS and genes; do not use it if you does not have IS annotation files
+                             e.g.: y
+
+threads [INT]:               number of threads passed to R in quality control,
+                             trimmomatic, hisat2, samtools and mmr
+                             e.g.: 8
+
+genomeURL [VARCHAR]:         URL to the NCBI RefSeq FTP.
+                             it is used to get the reference genome and annotation files
+                             e.g.: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz
+
+readsize [INT]:              mean read size passed to mmr.
+                             e.g.: 50
+
+strandspecific [VARCHAR]:    flag indicating whether RNA-Seq data is stranded or not
+                             e.g.: y
+
+invertstrand [VARCHAR]:      flag indicating whether RNA-Seq data is from dUTP libraries
+                             and should be inverted when computing genome-wide read depth
+                             e.g.: y
+
+additionalPlots [VARCHAR]:   flag indicating whether additional read depth plots should be created;
+	    	                 if additionalPlots = y, the program will create additional coverage files
+                             with non-normalized counts and normalized log2 counts
+                             e.g.: n
+
+windowsize [INT]:            size of windows while computing genome AT content
+                             and RNA Binding Protein (RBP) density
+                             e.g.: 250
+
+stepsize [INT]:              size of step while computing genome AT content and RBP density
+                             e.g.: 250
+
+log2fcthreshold [INT]:       threshold used to identify which regions interact with given RBP;
+		                     for example using log2fcthreshold = 2, means that the program will
+		                     consider a base bound to RBP only if a position satisfies
+                             rip count/control count >= 4.
+                             e.g.: 2
+
+minlength [INT]:             minimum length of transcript fragments interacting with RBP;
+	                         for example, if minlength = 10, the program will create fragments
+                             only if there are at least 10 consecutive bases satisfying log2fcthreshold
+                             e.g.: 10
+
+e.g.:
+bash ripper.sh Hsalinarum control y 8 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
+
+if something goes wrong, one may remove all the directories and files created by this script by doing
+rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circos
+
+" && exit 1
+
 fi
 
-# checking scripts
-if [ ! -e misc/1stQC.R ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/2ndQC.R ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/correlationAnalysis.R ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/lsm-position.R ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/lsm-positionGenes.R ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/computeGC.sh ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/createCircosFiles.sh ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-if [ ! -e misc/circos.conf ] ; then echo >&2 "Missing script. Aborting" ; exit 1 ; fi
-
-######################
-# getting parameters
-######################
+####################################
+# ARGUMENT VARIABLES
+####################################
 spp=${1}
 control=${2}
 positionAnalysis=${3} # choose if IS position analysis will be performed
 threads=${4} # choose how many threads to be used
+
 genomeURL=${5} # genome url from ncbi ftp
+annotURL=${genomeURL/.fna.gz/.gff.gz}
+
 readsize=${6} # mean readsize to input in mmr
 
 if [ ${7} == "y" ] ; then
@@ -169,27 +130,100 @@ if [ $invertstrand == "y" ] ; then
 fi
 
 additionalPlots=${9}
-
 windowsize=${10} # these two parameters for GC content computation
 stepsize=${11}
 
-## parameters for interaction regions finding
+## parameters for finding interaction regions
 # threshold=1.58496 is log2(3)
 threshold=${12}
-minsize=${13} # minimum size of interaction region
+# minimum size of interaction region
+minsize=${13} 
 
-######################
-# checking quality
-######################
-if [ ! -d 1stQC ] ; then
-	echo >&2 "First round of quality control"
-	mkdir 1stQC
-	R -q -f misc/1stQC.R --args $threads > /dev/null 2>&1
+####################################
+# HARD CODED VARIABLES
+####################################
+rawdir="raw"
+miscdir="misc"
+scriptsdir="scripts"
+firstqcdir="1stQC"
+trimmeddir="trimmed"
+secondqcdir="2ndQC"
+samdir="sam"
+bamdir="bam"
+covdir="cov"
+positionanalysisdir="positionAnalysis"
+positionanalysisgenesdir="positionAnalysisGenes"
+gccontentdir="gccontent"
+correlationanalysisdir="correlationAnalysis"
+circosdir="circos"
+
+####################################
+# PROGRAM STAMP
+####################################
+echo "Ripper:
+A tool to process Illumina RIP-Seq/HITS-CLIP data.
+Version: $version
+Last update: $lastupdate"
+
+####################################
+# CALL AND DATE
+####################################
+dateAndTime=`date`
+echo "$dateAndTime"
+echo "Call: $0 $@"
+
+####################################
+# CHECKING DEPENDENCIES
+####################################
+
+# list of program dependencies
+dependencies="bedtools R infoseq hisat2 samtools mmr circos"
+
+echo "Checking dependencies..."
+
+# checking programs
+for i in $dependencies ; do
+    command -v $i > /dev/null >&1 || { echo >&2 "$i isn't installed. Aborting" ; exit 1; }
+done 
+
+if [ ! -e /opt/Trimmomatic-0.36/trimmomatic-0.36.jar ] ; then echo >&2 "trimmomatic isn't installed. Aborting" ; exit 1; fi
+
+# checking files
+if [ ! -e $miscdir/adap.fa ] ; then echo >&2 "Adapter sequences not found. Aborting" ; exit 1 ; fi
+if [ ! -e $rawdir/$control.fastq ] ; then echo >&2 "Control file not found. Aborting" ; exit 1 ; fi
+
+if [ "$positionAnalysis" == "y" ] ; then
+	if [ ! -e misc/$spp-ISSaga-checked.gff3 ] ; then echo >&2 "IS annotation not found. Aborting" ; exit 1 ; fi
 fi
 
-######################
+# checking scripts
+scripts="1stQC.R 2ndQC.R correlationAnalysis.R lsm-position.R lsm-positionGenes.R computeGC.sh createCircosFiles.sh circos.conf"
+
+for i in $scripts ; do
+    if [ ! -e $scriptsdir/$i ] ; then
+        echo >&2 "Missing $i script. Aborting"
+        exit 1
+    fi
+done
+
+echo "Done!"
+
+####################################
+# PROCESSING STARTS HERE
+####################################
+
+####################################
+# checking quality
+####################################
+if [ ! -d $firstqcdir ] ; then
+	echo "First round of quality control"
+	mkdir $firstqcdir
+	R -q -f $scriptsdir/1stQC.R --args $threads > /dev/null 2>&1
+fi
+
+####################################
 # trimming with trimmomatic
-######################
+####################################
 # adapter sequence example AGATCGGAAGAGCACACGTCTGAACTCCAGTCACAGTCAACTCTCGTATGCCGTCTTCTGCTTG
 if [ ! -d trimmed ] ; then
 	echo >&2 "Trimming fastq files"
@@ -201,9 +235,9 @@ if [ ! -d trimmed ] ; then
 	done
 fi
 
-######################
+####################################
 # checking quality after trimming
-######################
+####################################
 
 if [ ! -d 2ndQC ] ; then
 	echo >&2 "Second round of quality control"
@@ -211,9 +245,9 @@ if [ ! -d 2ndQC ] ; then
 	R -q -f misc/2ndQC.R --args $threads > /dev/null 2>&1
 fi
 
-######################
+####################################
 # downloading genome and creating idx
-######################
+####################################
 
 if [ ! -f misc/$spp.fa ] ; then
 	echo >&2 "Downloading genome and creating Bowtie index"
@@ -224,9 +258,9 @@ fi
 # building index
 hisat2-build misc/$spp".fa" misc/$spp > /dev/null 2>&1
 
-######################
+####################################
 # aligning to reference genome
-######################
+####################################
 if [ ! -d sam ] ; then
 	echo >&2 "Aligning reads to reference genome"
 	mkdir sam
@@ -257,9 +291,9 @@ if [ ! -d sam ] ; then
 	done
 fi
 
-######################
+####################################
 # processing bam files
-######################
+####################################
 if [ ! -d bam ] ; then
 	echo >&2 "Processing BAM files"
 	mkdir bam
@@ -289,9 +323,9 @@ if [ ! -d bam ] ; then
 	done
 fi
 
-######################
+####################################
 # Creating coverage files
-######################
+####################################
 # creating coverage file for rev and fwd
 # ATTENTION HERE:
 # for Truseq Stranded mRNA library preparation kit (Hsalinarum library)
@@ -422,9 +456,9 @@ if [ ! -d cov ] ; then
 		fi
 	done
 
-	######################
+	####################################
 	# Computing fold changes
-	######################
+	####################################
 	
 	if [ "$additionalPlots" == "y" ] ; then
 		# fwd absolut count
@@ -477,9 +511,9 @@ if [ ! -d cov ] ; then
 	done
 fi
 
-###########################################
-# ENTERING NEW PROGRAM: createInTracks.sh #
-###########################################
+####################################
+# ENTERING NEW PROGRAM: createInTracks.sh 
+####################################
 echo >&2 "Creating regions of interaction"
 
 # this program creates regions of interaction (GFF3)
@@ -575,9 +609,9 @@ do
 		}'
 done > "interaction-regions-entire-genome-"$strandname".gff3"
 
-######################
+####################################
 # performing position analysis
-######################
+####################################
 # for insertion sequences and genes
 if [ "$positionAnalysis" == "y" ] ; then
 	echo >&2 "Performing position analysis"
@@ -603,27 +637,27 @@ if [ "$positionAnalysis" == "y" ] ; then
 	fi
 fi
 
-######################
+####################################
 # computing genome-wide GC content
-######################
+####################################
 if [ ! -d gccontent ] ; then
 	echo >&2 "Computing GC content"
 	mkdir gccontent
 	bash misc/computeGC.sh misc/$spp.fa $windowsize $stepsize
 fi
 
-######################
+####################################
 # correlation analysis
-######################
+####################################
 if [ ! -d correlationAnalysis ] ; then
 	echo >&2 "Performing correlation analysis"
 	mkdir correlationAnalysis
 	R --slave -q -f misc/correlationAnalysis.R --args $windowsize $stepsize $threshold > /dev/null 2>&1
 fi
 
-######################
+####################################
 # creating circos ideograms
-######################
+####################################
 if [ ! -d circos ] ; then
 	echo >&2 "Generating Circos Ideograms"
 	mkdir circos
@@ -650,3 +684,121 @@ fi
 
 echo >&2 "Done."
 
+# continuing the help if-else statement
+else
+echo '
+####################################
+# USAGE MANUAL
+####################################
+
+bash ripper.sh <spp> <control_lib> <positionAnalysis> <threads> <genomeURL> <readsize> <strandspecific> <invertstrand> <additionalPlots> <windowsize> <stepsize> <log2fcthreshold> <minlength>
+
+spp [VARCHAR]:               prefix used by the script to read and write target files.
+                             I advise the use of species name. e.g.: Hsalinarum
+                             the hisat2 indexes will be set as misc/Hsalinarum.1.ebwt .
+                             by the same means, the IS annotation file should be
+                             Hsalinarum-ISSaga-checked.gff3
+
+control_lib [VARCHAR]:       prefix used to read the control fastq file.
+                             e.g.: control
+
+positionAnalysis [VARCHAR]:  flag indicating whether position analysis will be performed
+                             for IS and genes; do not use it if you does not have IS annotation files
+                             e.g.: y
+
+threads [INT]:               number of threads passed to R in quality control,
+                             trimmomatic, hisat2, samtools and mmr
+                             e.g.: 8
+
+genomeURL [VARCHAR]:         URL to the NCBI RefSeq FTP.
+                             it is used to get the reference genome and annotation files
+                             e.g.: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz
+
+readsize [INT]:              mean read size passed to mmr.
+                             e.g.: 50
+
+strandspecific [VARCHAR]:    flag indicating whether RNA-Seq data is stranded or not
+                             e.g.: y
+
+invertstrand [VARCHAR]:      flag indicating whether RNA-Seq data is from dUTP libraries
+                             and should be inverted when computing genome-wide read depth
+                             e.g.: y
+
+additionalPlots [VARCHAR]:   flag indicating whether additional read depth plots should be created;
+	    	                 if additionalPlots = y, the program will create additional coverage files
+                             with non-normalized counts and normalized log2 counts
+                             e.g.: n
+
+windowsize [INT]:            size of windows while computing genome AT content
+                             and RNA Binding Protein (RBP) density
+                             e.g.: 250
+
+stepsize [INT]:              size of step while computing genome AT content and RBP density
+                             e.g.: 250
+
+log2fcthreshold [INT]:       threshold used to identify which regions interact with given RBP;
+		                     for example using log2fcthreshold = 2, means that the program will
+		                     consider a base bound to RBP only if a position satisfies
+                             rip count/control count >= 4.
+                             e.g.: 2
+
+minlength [INT]:             minimum length of transcript fragments interacting with RBP;
+	                         for example, if minlength = 10, the program will create fragments
+                             only if there are at least 10 consecutive bases satisfying log2fcthreshold
+                             e.g.: 10
+
+e.g.:
+bash ripper.sh Hsalinarum control y 8 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
+
+if something goes wrong, one may remove all the directories and files created by this script by doing
+rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circos
+
+####################################
+REQUIRED FILES AND PROGRAMS
+####################################
+
+programs:
+
+trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar
+hisat2 v1.1.2 @ PATH
+samtools v1.3.1 @ PATH
+bedtools v2.21.0 @ PATH
+R @ PATH ; also it has many library dependencies that should be installed automatically
+MMR default version @ PATH
+circos v0.69-6 @ PATH
+
+files:
+
+IS annotation contained in misc directory
+scripts contained in misc directory
+adap fasta adap.fa contained in misc directory
+raw data (below) contained in the raw directory
+rip fastq rip.fastq (single-end Illumina sequencing)
+control fastq control.fastq (single-end Illumina sequencing)
+
+required directory structure and files:
+
+yourDirectory
+├── misc
+│   ├── adap.fa
+│   └── Hsalinarum-ISSaga-checked.gff3
+├── raw
+│   ├── <control_lib>.fastq.gz
+│   └── rip.fastq.gz
+├── ripper.sh
+└── scripts
+    ├── 1stQC.R
+    ├── 2ndQC.R
+    ├── check-genes-with-lsm.sh
+    ├── circos.conf
+    ├── computeGC.sh
+    ├── correlationAnalysis.R
+    ├── createCircosFiles.sh
+    ├── lsm-positionGenes.R
+    └── lsm-position.R
+
+several directories and files will be created during the execution and they will be placed
+majorly in "yourDirectory" and "misc"
+
+'
+fi
