@@ -5,7 +5,8 @@ addCommitPush.sh
 frtc-working-on-parallel-not-ready.sh
 
 # misc dir
-misc
+misc/adap.fa
+misc/Hsalinarum-ISSaga-checked.gff3
 
 # OS generated files #
 ######################
