@@ -282,7 +282,7 @@ if [ ! -d $samdir ] ; then
 
     # creating file to store number of alignments
     # for each seq lib
-    touch $samdir/readsAligned.txt
+    touch $miscdir/readCounts.txt
 
     ## aligning to genome
     for i in $trimmeddir/*.fastq ; do
@@ -302,7 +302,7 @@ if [ ! -d $samdir ] ; then
         uniqReads=`grep "aligned exactly 1 time" $log | sed 's/^    \(.*\) (.*$/\1/'` # extracting number of uniq aligned reads from log
         multiReads=`grep "aligned >1 times" $log | sed 's/^    \(.*\) (.*$/\1/'` # extracting number of multi aligned reads from log
         alnReads=`echo "$uniqReads+$multiReads" | bc` # computing how many reads have been aligned
-        printf "$prefix-multi\t$alnReads\n" >> $samdir/readsAligned.txt # storing it to file
+        printf "$prefix-multi\t$alnReads\n" >> $miscdir/readCounts.txt # storing it to file
     done
 
     echo "Done!"
@@ -369,9 +369,9 @@ if [ ! -d $covdir ] ; then
     fi
 
     # creating correction factor for normalization
-    maxReads=`awk 'OFS="\t" {if($2 >= n){n = $2}} END {print n}' $samdir/readsAligned.txt` # storing number of maximum aligned reads of a lib
-    awk -v maxReads=$maxReads 'OFS="\t" {print $1, $2, maxReads/$2}' $samdir/readsAligned.txt > awk.tmp # creating correction factor file
-    mv awk.tmp $samdir/readsAligned.txt # renaming it
+    maxReads=`awk 'OFS="\t" {if($2 >= n){n = $2}} END {print n}' $miscdir/readCounts.txt` # storing number of maximum aligned reads of a lib
+    awk -v maxReads=$maxReads 'OFS="\t" {print $1, $2, maxReads/$2}' $miscdir/readCounts.txt > awk.tmp # creating correction factor file
+    mv awk.tmp $miscdir/readCounts.txt # renaming it
 
     ## CONTROL LIB
 
@@ -379,7 +379,7 @@ if [ ! -d $covdir ] ; then
     for i in $covdir/$control*counts-fwd.txt ; do
         name=$(echo $i | sed 's/.txt//')
         idxLib=$(echo $i | sed "s/^$covdir\///;s/-counts-fwd.txt//")
-        corFactor=`grep -w $idxLib $samdir/readsAligned.txt | awk '{print $3}'`
+        corFactor=`grep -w $idxLib $miscdir/readCounts.txt | awk '{print $3}'`
     
         # normalized count (prepared to compute fold change)
         awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) >= 1)\
@@ -405,7 +405,7 @@ if [ ! -d $covdir ] ; then
     for i in $covdir/$control*counts-rev.txt ; do
         name=$(echo $i | sed 's/.txt//')
         idxLib=$(echo $i | sed "s/^$covdir\///;s/-counts-rev.txt//")
-        corFactor=`grep -w $idxLib $samdir/readsAligned.txt | awk '{print $3}'`
+        corFactor=`grep -w $idxLib $miscdir/readCounts.txt | awk '{print $3}'`
 
         # normalized count (prepared to compute fold change)
         awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) >= 1)\
@@ -434,7 +434,7 @@ if [ ! -d $covdir ] ; then
     for i in $nonControl ; do 
         name=$(echo $i | sed 's/.txt//')
         idxLib=$(echo $i | sed "s/^$covdir\///;s/-counts-fwd.txt//")
-        corFactor=`grep -w $idxLib $samdir/readsAligned.txt | awk '{print $3}'`
+        corFactor=`grep -w $idxLib $miscdir/readCounts.txt | awk '{print $3}'`
 
         # normalized count (prepared to compute fold change)
         awk -v corFactor=$corFactor 'OFS="\t" {print $1, "+", $2, $3*corFactor}' $i > $name"-normalized-ggb.txt" 
@@ -456,7 +456,7 @@ if [ ! -d $covdir ] ; then
     for i in $nonControl ; do
         name=$(echo $i | sed 's/.txt//')
         idxLib=$(echo $i | sed "s/^$covdir\///;s/-counts-rev.txt//")
-        corFactor=`grep -w $idxLib $samdir/readsAligned.txt | awk '{print $3}'`
+        corFactor=`grep -w $idxLib $miscdir/readCounts.txt | awk '{print $3}'`
    
         # normalized count (prepared to compute fold change)
         awk -v corFactor=$corFactor 'OFS="\t" {print $1, "-", $2, $3*corFactor}' $i > $name"-normalized-ggb.txt"
