@@ -4,10 +4,6 @@ addCommitPush.sh
 # temp dev file
 frtc-working-on-parallel-not-ready.sh
 
-# misc dir
-misc/adap.fa
-misc/Hsalinarum-ISSaga-checked.gff3
-
 # OS generated files #
 ######################
 .DS_Store
