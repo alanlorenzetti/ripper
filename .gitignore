@@ -1,0 +1,15 @@
+# commit and push script
+addCommitPush.sh
+
+# temp dev file
+frtc-working-on-parallel-not-ready.sh
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
