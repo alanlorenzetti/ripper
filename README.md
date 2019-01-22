@@ -14,7 +14,7 @@ This script will perform every task to analyze prokaryotic RIP-Seq/CLIP-Seq Illu
                     /.`                          \/ /                          `.\
                    |`                            / /\                            `|
 
-ASCII Art Credits: David Palmer
-http://www.ascii-art.de/ascii/s/scythe.txt
 ```
+
+[ASCII Art Credits: David Palmer](http://www.ascii-art.de/ascii/s/scythe.txt)
 
