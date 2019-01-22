@@ -198,7 +198,7 @@ done
 
 # checking files
 if [ ! -e $miscdir/adap.fa ] ; then echo >&2 "Adapter sequences not found. Aborting" ; exit 1 ; fi
-if [ ! -e $rawdir/$control.fastq ] ; then echo >&2 "Control file not found. Aborting" ; exit 1 ; fi
+if [ ! -e $rawdir/$control.fastq.gz ] ; then echo >&2 "Control file not found. Aborting" ; exit 1 ; fi
 
 if [ "$positionAnalysis" == "y" ] ; then
     if [ ! -e $miscdir/$spp-ISSaga-checked.gff3 ] ; then echo >&2 "IS annotation not found. Aborting" ; exit 1 ; fi
@@ -238,9 +238,9 @@ fi
 if [ ! -d $trimmeddir ] ; then
     echo "Trimming fastq files"
     mkdir $trimmeddir
-    for i in $rawdir/*.fastq ; do
+    for i in $rawdir/*.fastq.gz ; do
         out=$(echo $i | sed "s/^$rawdir/$trimmeddir/g")
-        log=$(echo $i | sed "s/^$rawdir/$trimmeddir/g;s/.fastq$/.log/")
+        log=$(echo $i | sed "s/^$rawdir/$trimmeddir/g;s/.fastq.gz$/.log/")
         java -jar /opt/Trimmomatic-0.36/trimmomatic-0.36.jar SE -threads $threads $i $out ILLUMINACLIP:$miscdir/adap.fa:2:30:10 SLIDINGWINDOW:5:28 MINLEN:15 > $log 2>&1
     done
 
@@ -285,8 +285,8 @@ if [ ! -d $samdir ] ; then
     touch $miscdir/readCounts.txt
 
     ## aligning to genome
-    for i in $trimmeddir/*.fastq ; do
-        prefix=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/.fastq$//")
+    for i in $trimmeddir/*.fastq.gz ; do
+        prefix=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/.fastq.gz$//")
         out=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq$/sam/")
         log=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq$/log/")
         hisat2 --no-spliced-alignment \
@@ -800,8 +800,8 @@ IS annotation contained in misc directory
 scripts contained in misc directory
 adap fasta adap.fa contained in misc directory
 raw data (below) contained in the raw directory
-rip fastq rip.fastq (single-end Illumina sequencing)
-control fastq control.fastq (single-end Illumina sequencing)
+rip fastq rip.fastq.gz (single-end Illumina sequencing)
+control fastq control.fastq.gz (single-end Illumina sequencing)
 
 required directory structure and files:
 
