@@ -11,8 +11,7 @@ gccontentdir = args[3]
 correlationanalysisdir = args[4]
 circlizedir = args[5]
 
-# save svg?
-save="y"
+# svg parameters?
 ht=10
 wh=10
 
@@ -53,7 +52,7 @@ for(repliconidx in 1:length(df$acc)){
              "track.height" = 0.075)
   
   # saving
-  if(save=="y"){svg(paste0(circlizedir, "/", df[repliconidx,1], ".svg"), height = ht, width = wh)}
+  svg(paste0(circlizedir, "/", df[repliconidx,1], ".svg"), height = ht, width = wh)
   par(cex=1.5)
   
   #### init plot with the genome layout ####
@@ -97,6 +96,6 @@ for(repliconidx in 1:length(df$acc)){
   circos.genomicHeatmap(lsm, col = col, numeric.column = 4, connection_height = 0.0001, heatmap_height = 0.1)
   # need a border down here
   
-  # saving plot
-  if(save=="y"){dev.off()}
+  # closing dev to save plot
+  dev.off()
 }
