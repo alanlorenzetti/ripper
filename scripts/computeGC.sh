@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# alorenzetti 201708
+# alorenzetti jan 2019
 
 # require emboss
 # require bedtools
@@ -14,8 +14,8 @@ windowsize=$3
 stepsize=$4
 gccontentdir=$5
 
-# genome fasta file = $1
-infoseq -only -length -name $miscdir/$spp.fa | tail -n +2 | sed "s/ \+/	/" > gtmp 2> /dev/null
+# genome fasta file
+infoseq -only -length -name $miscdir/$spp.fa 2> /dev/null | tail -n +2 | sed 's/ \+/\t/' > gtmp 
 
 # creating windows
 bedtools makewindows -g gtmp -w $windowsize -s $stepsize > wtmp
@@ -31,12 +31,12 @@ rm gtmp wtmp
 # for LSm-bound transcripts
 echo replicon_name Avg_GC_content_genome AVG_GC_content_transcript > tmp2
 
-for i in `grep "^>" $1 | sed 's/^>//;s/ .*$//'` ; do
+for i in `grep "^>" $miscdir/$spp.fa | sed 's/^>//;s/ .*$//'` ; do
 
 	cat interaction-regions-entire-genome-fwd.gff3 interaction-regions-entire-genome-rev.gff3 |\
 	awk -v replicon=$i -v FS="\t" -v OFS="\t" '{if($1 == replicon){print}}' > tmp1
-	GCtranscript=`bedtools nuc -fi $1 -bed tmp1 | awk -v sum=0 '{sum=sum+$11}END{print sum/NR*100}'`
-	GCgenome=`infoseq $1 2> /dev/null | grep $i | awk '{print $7}'`
+	GCtranscript=`bedtools nuc -fi $miscdir/$spp.fa -bed tmp1 | awk -v sum=0 '{sum=sum+$11}END{print sum/NR*100}'`
+	GCgenome=`infoseq $miscdir/$spp.fa 2> /dev/null | grep $i | awk '{print $7}'`
 
 	echo $i $GCgenome $GCtranscript
 done >> tmp2

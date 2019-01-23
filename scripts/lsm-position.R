@@ -1,5 +1,5 @@
-# alorenzetti nov 2016
-# v0.2
+# alorenzetti jan 2019
+# v0.3
 
 # it finds where is a lsm interaction within one IS
 # five sense/antisense regions are possible:
@@ -35,7 +35,7 @@ pct = 0.2
 if(file.size("interaction-regions-fwd.gff3") != 0 & file.size("interaction-regions-rev.gff3") != 0){
 	lsmfwd = read.delim("interaction-regions-fwd.gff3", header=FALSE, row.names = NULL)
 	lsmrev = read.delim("interaction-regions-rev.gff3", header=FALSE, row.names = NULL)
-	# just one file for all interaction regions
+	# just one object for all interaction regions
 	lsm = rbind(lsmfwd, lsmrev)
 }
 
@@ -164,7 +164,7 @@ colnames(results) = c("chr", "start", "end", "strand", "name", "family",
 results[,7:16] = (results[,7:16] >= 1) * 1
 
 # writing results to table
-write.csv(results, file = paste0(positionanalysisdir, "/results.txt", quote = FALSE, row.names = FALSE)
+write.csv(results, file = paste0(positionanalysisdir, "/results.txt"), quote = FALSE, row.names = FALSE)
 
 ## This block for redundant names
 
@@ -182,7 +182,7 @@ col = vec2col(x, name = "Spectral")
 # plotting heatmap
 M = as.matrix(M)
 
-svg(paste0(positionanalysisdir, "/redundantIS.svg", width = 8.267, height = 11.692)
+svg(paste0(positionanalysisdir, "/redundantIS.svg"), width = 8.267, height = 11.692)
 heatmap.2(M,
           scale="none",
           trace = "none",
@@ -219,7 +219,7 @@ col = vec2col(x, name = "Spectral")
 
 # plotting heatmap
 MM = as.matrix(MM)
-svg(paste0(positionanalysisdir, "/nonredundantIS.svg", width = 8.267, height = 11.692)
+svg(paste0(positionanalysisdir, "/nonredundantIS.svg"), width = 8.267, height = 11.692)
 heatmap.2(MM,
           scale="none",
           trace = "none",

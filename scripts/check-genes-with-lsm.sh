@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# alorenzetti 201705
+# alorenzetti jan 2019
 # this script will take lsm-interaction-positions
 # in gff3 format and then process it to find genes
 # interacting with this protein in H. salinarum NRC-1
@@ -60,4 +60,7 @@ rm tmp1 tmp2
 # 3rd part - downstream analysis using R
 ##########
 
-R --slave -q -f $scriptsdir/lsm-positionGenes.R --args $positionanalysisgenesdir/interaction-regions-genes.gff3 $positionanalysisgenesdir/$spp-annot-genesWithInteraction.gff3 $positionanalysisgenesdir > /dev/null 2>&1
+R --slave -q -f $scriptsdir/lsm-positionGenes.R \
+  --args $positionanalysisgenesdir/interaction-regions-genes.gff3 \
+  $positionanalysisgenesdir/$spp-annot-genesWithInteraction.gff3 \
+  $positionanalysisgenesdir > /dev/null 2>&1

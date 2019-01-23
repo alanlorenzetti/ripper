@@ -15,7 +15,7 @@
 ####################################
 
 version=0.3.0
-lastupdate=20190122
+lastupdate=20190123
 
 # please, check the README.md file before using this script
 # there is also a version of the manual on the end of this file
@@ -281,10 +281,6 @@ if [ ! -d $samdir ] ; then
     echo "Aligning reads to reference genome"
     mkdir $samdir
 
-    # creating file to store number of alignments
-    # for each seq lib
-    touch $miscdir/readCounts.txt
-
     ## aligning to genome
     for i in $trimmeddir/*.fastq.gz ; do
         prefix=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/.fastq.gz$//")
@@ -300,10 +296,6 @@ if [ ! -d $samdir ] ; then
                        -x $miscdir/$spp \
                        -U $i \
                        --summary-file $log > $out 
-        uniqReads=`grep "aligned exactly 1 time" $log | sed 's/^    \(.*\) (.*$/\1/'` # extracting number of uniq aligned reads from log
-        multiReads=`grep "aligned >1 times" $log | sed 's/^    \(.*\) (.*$/\1/'` # extracting number of multi aligned reads from log
-        alnReads=`echo "$uniqReads+$multiReads" | bc` # computing how many reads have been aligned
-        printf "$prefix-multi\t$alnReads\n" >> $miscdir/readCounts.txt # storing it to file
     done
 
     echo "Done!"
@@ -315,6 +307,7 @@ fi
 if [ ! -d $bamdir ] ; then
     echo "Processing BAM files"
     mkdir $bamdir
+
     # sam2bam ; sort bam
     for i in $samdir/*.sam; do
         out=$(echo $i | sed "s/^$samdir/$bamdir/;s/sam$/bam/")
@@ -354,6 +347,7 @@ fi
 if [ ! -d $covdir ] ; then
     echo "Creating read depth files"
     mkdir $covdir
+
     if [ "$invertstrand" == "y" ]
     then
         for i in $bamdir/*-mmr.bam ; do
@@ -370,9 +364,21 @@ if [ ! -d $covdir ] ; then
     fi
 
     # creating correction factor for normalization
-    maxReads=`awk 'OFS="\t" {if($2 >= n){n = $2}} END {print n}' $miscdir/readCounts.txt` # storing number of maximum aligned reads of a lib
-    awk -v maxReads=$maxReads 'OFS="\t" {print $1, $2, maxReads/$2}' $miscdir/readCounts.txt > awk.tmp # creating correction factor file
-    mv awk.tmp $miscdir/readCounts.txt # renaming it
+    # creating file to store number of alignments for each seq lib
+    touch $miscdir/readCounts.txt
+
+    for i in $bamdir/*-mmr.bam ; do
+        prefix=$(echo $i | sed "s/^$bamdir.//;s/-mmr.bam$//")
+        alnReads=`samtools view -@ $threads $i | wc -l`
+        echo -e "$prefix-multi\t$alnReads" >> $miscdir/readCounts.txt
+    done
+
+    # storing number of maximum aligned reads of all libs
+    maxReads=`awk 'OFS="\t" {if($2 >= n){n = $2}} END {print n}' $miscdir/readCounts.txt`
+    # creating correction factor file
+    awk -v maxReads=$maxReads 'OFS="\t" {print $1, $2, maxReads/$2}' $miscdir/readCounts.txt > awk.tmp
+    # renaming it
+    mv awk.tmp $miscdir/readCounts.txt
 
     ## CONTROL LIB
 
@@ -386,7 +392,8 @@ if [ ! -d $covdir ] ; then
         awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) >= 1)\
                             {print $1, "+", $2, $3*corFactor}\
                             else\
-                            {print $1, "+", $2, "1"}}' $i > $name"-normalized-ggb.txt" 
+                            {print $1, "+", $2, "1"}}' $i > $name"-normalized-ggb.txt"
+
         if [ "$additionalPlots" == "y" ] ; then
             # absolut count (prepared to compute fold change)
             awk -v corFactor=$corFactor 'OFS="\t" {if(($3) >= 1)\
@@ -413,6 +420,7 @@ if [ ! -d $covdir ] ; then
                             {print $1, "-", $2, $3*corFactor}\
                             else\
                             {print $1, "-", $2, "1"}}' $i > $name"-normalized-ggb.txt"
+
         if [ "$additionalPlots" == "y" ] ; then
             # absolut count (prepared to compute fold change)
             awk -v corFactor=$corFactor 'OFS="\t" {if(($3) >= 1)\
@@ -654,6 +662,8 @@ if [ "$positionAnalysis" == "y" ] ; then
         mkdir $positionanalysisgenesdir
         bash $scriptsdir/check-genes-with-lsm.sh $spp $annotURL $miscdir $scriptsdir $positionanalysisgenesdir
     fi
+
+    echo "Done!"
 fi
 
 ####################################
@@ -661,8 +671,11 @@ fi
 ####################################
 if [ ! -d $gccontentdir ] ; then
     echo "Computing GC content"
+
     mkdir $gccontentdir
-    bash $scriptsdir/computeGC.sh $miscdir $windowsize $stepsize $gccontentdir
+    bash $scriptsdir/computeGC.sh $spp $miscdir $windowsize $stepsize $gccontentdir
+
+    echo "Done!"
 fi
 
 ####################################
@@ -670,8 +683,11 @@ fi
 ####################################
 if [ ! -d $correlationanalysisdir ] ; then
     echo "Performing correlation analysis"
+
     mkdir $correlationanalysisdir
     R --slave -q -f $scriptsdir/correlationAnalysis.R --args $windowsize $stepsize $threshold $gccontentdir $covdir $correlationanalysisdir > /dev/null 2>&1
+
+    echo "Done!"
 fi
 
 ####################################
@@ -679,6 +695,7 @@ fi
 ####################################
 if [ ! -d $circosdir ] ; then
     echo "Generating Circos Ideograms"
+
     mkdir $circosdir
     bash $scriptsdir/createCircosFiles.sh $spp $positionAnalysis $miscdir $circosdir
     
