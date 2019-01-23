@@ -70,7 +70,8 @@ invertstrand [VARCHAR]:      flag indicating whether RNA-Seq data is from dUTP l
                              and should be inverted when computing genome-wide read depth
                              e.g.: y
 
-additionalPlots [VARCHAR]:   flag indicating whether additional read depth plots should be created;
+additionalPlots [VARCHAR]:   DEPRECATED (you can assign any character but it will take no effect)
+                             flag indicating whether additional read depth plots should be created;
                              if additionalPlots = y, the program will create additional coverage files
                              with non-normalized counts and normalized log2 counts
                              e.g.: n
@@ -129,7 +130,8 @@ if [ $invertstrand == "y" ] ; then
     hisatstrand="FR"
 fi
 
-additionalPlots=${9}
+# additionalPlots=${9} # DEPRECATED
+additionalPlots="n" # not read from user input anymore
 windowsize=${10} # these two parameters for GC content computation
 stepsize=${11}
 
@@ -270,7 +272,6 @@ if [ ! -f $miscdir/$spp.fa ] ; then
 
     # building index
     hisat2-build $miscdir/$spp".fa" $miscdir/$spp > /dev/null 2>&1
-
     echo "Done!"
 fi
 
@@ -324,13 +325,16 @@ if [ ! -d $bamdir ] ; then
     done
 
     # we need to resort bam using default mode in order to proceed
+    # we are also indexing them for visualization
     for i in $bamdir/*-mmr.bam; do
         samtools sort -@ $threads -o $i $i
+        samtools index -b $i
     done
 
-    # I will also sort the input bam in order to compare mmr and non-mmr versions
+    # I will also sort and index the input bam in order to compare mmr and non-mmr versions
     for i in `ls $bamdir/*.bam | grep -v mmr`; do
         samtools sort -@ $threads -o $i $i
+        samtools index -b $i
     done
 
     echo "Done!"
@@ -350,27 +354,33 @@ if [ ! -d $covdir ] ; then
 
     if [ "$invertstrand" == "y" ]
     then
-        for i in $bamdir/*-mmr.bam ; do
-            prefix=$(echo $i | sed "s/^$bamdir/$covdir/;s/-mmr.bam$//")
-            bedtools genomecov -ibam $i -d -strand + > $prefix"-counts-rev.txt" # note the inversion of strand on the output file name
-            bedtools genomecov -ibam $i -d -strand - > $prefix"-counts-fwd.txt" # note the inversion of strand on the output file name
-        done
+        strandfwd="-"
+        strandrev="+"
     else
-        for i in $bamdir/*-mmr.bam ; do
-            prefix=$(echo $i | sed "s/^$bamdir/$covdir/;s/-mmr.bam$//")
-            bedtools genomecov -ibam $i -d -strand - > $prefix"-counts-rev.txt"
-            bedtools genomecov -ibam $i -d -strand + > $prefix"-counts-fwd.txt"
-        done
+        strandfwd="+"
+        strandrev="-"
     fi
+
+    # note the inversion of strand on the output file name if  invertstrand == y
+    for i in $bamdir/*-mmr.bam ; do
+      prefix=$(echo $i | sed "s/^$bamdir/$covdir/;s/-mmr.bam$//")
+      bedtools genomecov -ibam $i -d -strand $strandrev > $prefix"-counts-rev.txt" 
+      bedtools genomecov -ibam $i -d -strand $strandfwd > $prefix"-counts-fwd.txt" 
+    done
 
     # creating correction factor for normalization
     # creating file to store number of alignments for each seq lib
-    touch $miscdir/readCounts.txt
+    if [ ! -f $miscdir/readCounts.txt ] ; then
+        touch $miscdir/readCounts.txt
+    else
+        rm $miscdir/readCounts.txt
+        touch $miscdir/readCounts.txt
+    fi
 
     for i in $bamdir/*-mmr.bam ; do
         prefix=$(echo $i | sed "s/^$bamdir.//;s/-mmr.bam$//")
         alnReads=`samtools view -@ $threads $i | wc -l`
-        echo -e "$prefix-multi\t$alnReads" >> $miscdir/readCounts.txt
+        echo -e "$prefix\t$alnReads" >> $miscdir/readCounts.txt
     done
 
     # storing number of maximum aligned reads of all libs
@@ -394,19 +404,8 @@ if [ ! -d $covdir ] ; then
                             else\
                             {print $1, "+", $2, "1"}}' $i > $name"-normalized-ggb.txt"
 
-        if [ "$additionalPlots" == "y" ] ; then
-            # absolut count (prepared to compute fold change)
-            awk -v corFactor=$corFactor 'OFS="\t" {if(($3) >= 1)\
-                                {print $1, "+", $2, $3}\
-                                else\
-                                {print $1, "+", $2, "1"}}' $i > $name"-absolut-ggb.txt"
-
-            # normalized log2 count
-            awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) != 0)\
-                                  {print $1, "+", $2, log($3*corFactor)/log(2)}\
-                                   else\
-                                  {print $1, "+", $2, "0"}}' $i > $name"-normalized-log2-ggb.txt"
-        fi
+        # normalized count (bedgraph format)
+        bedtools genomecov -ibam $bamdir/$idxLib-mmr.bam -bga -strand $strandfwd -scale $corFactor > $covdir/$idxLib"-counts-fwd-normalized.bedgraph"
     done
 
     # creating rev count file for GGB
@@ -421,19 +420,9 @@ if [ ! -d $covdir ] ; then
                             else\
                             {print $1, "-", $2, "1"}}' $i > $name"-normalized-ggb.txt"
 
-        if [ "$additionalPlots" == "y" ] ; then
-            # absolut count (prepared to compute fold change)
-            awk -v corFactor=$corFactor 'OFS="\t" {if(($3) >= 1)\
-                                {print $1, "-", $2, $3}\
-                                else\
-                                {print $1, "-", $2, "1"}}' $i > $name"-absolut-ggb.txt" 
+        # normalized count (bedgraph format)
+        bedtools genomecov -ibam $bamdir/$idxLib-mmr.bam -bga -strand $strandrev -scale $corFactor > $covdir/$idxLib"-counts-rev-normalized.bedgraph"
 
-            # normalized log2 count
-            awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) != 0)\
-                      {print $1, "-", $2, log($3*corFactor)/log(2)}\
-                       else\
-                      {print $1, "-", $2, "0"}}' $i > $name"-normalized-log2-ggb.txt"
-        fi
     done
 
     ## NON CONTROL LIBS
@@ -448,16 +437,8 @@ if [ ! -d $covdir ] ; then
         # normalized count (prepared to compute fold change)
         awk -v corFactor=$corFactor 'OFS="\t" {print $1, "+", $2, $3*corFactor}' $i > $name"-normalized-ggb.txt" 
 
-        if [ "$additionalPlots" == "y" ] ; then
-            # absolut count (prepared to compute fold change)
-            awk -v corFactor=$corFactor 'OFS="\t" {print $1, "+", $2, $3}' $i > $name"-absolut-ggb.txt" 
-    
-            # normalized log2 count
-            awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) != 0)\
-                      {print $1, "+", $2, log($3*corFactor)/log(2)}\
-                       else\
-                      {print $1, "+", $2, "0"}}' $i > $name"-normalized-log2-ggb.txt"
-        fi
+        # normalized count (bedgraph format)
+        bedtools genomecov -ibam $bamdir/$idxLib-mmr.bam -bga -strand $strandfwd -scale $corFactor > $covdir/$idxLib"-counts-fwd-normalized.bedgraph"
     done
 
     # creating rev count file for GGB
@@ -469,48 +450,14 @@ if [ ! -d $covdir ] ; then
    
         # normalized count (prepared to compute fold change)
         awk -v corFactor=$corFactor 'OFS="\t" {print $1, "-", $2, $3*corFactor}' $i > $name"-normalized-ggb.txt"
-    
-        if [ "$additionalPlots" == "y" ] ; then
-            # absolut count (prepared to compute fold change)
-            awk -v corFactor=$corFactor 'OFS="\t" {print $1, "-", $2, $3}' $i > $name"-absolut-ggb.txt"
-    
-            # normalized log2 count
-            awk -v corFactor=$corFactor 'OFS="\t" {if(($3*corFactor) != 0)\
-                      {print $1, "-", $2, log($3*corFactor)/log(2)}\
-                       else\
-                      {print $1, "-", $2, "0"}}' $i > $name"-normalized-log2-ggb.txt"
-        fi
+
+        # normalized count (bedgraph format)
+        bedtools genomecov -ibam $bamdir/$idxLib-mmr.bam -bga -strand $strandrev -scale $corFactor > $covdir/$idxLib"-counts-rev-normalized.bedgraph"
     done
 
     ####################################
     # Computing fold changes
     ####################################
-    
-    if [ "$additionalPlots" == "y" ] ; then
-        # fwd absolut count
-        nonControl=`ls $covdir/*-fwd-absolut-ggb.txt | grep -v $control`
-        for i in $nonControl ; do
-            name=$(echo $i | sed 's/.txt//')
-            paste $i $covdir/$control-multi-counts-fwd-absolut-ggb.txt |\
-            awk 'OFS="\t" {if($4 == 0 || $8 == 0)\
-                          {if($4 > $8){print $1, $2, $3, log($4)/log(2)}\
-                           else if($8 > $4){print $1, $2, $3, -1 * (log($8)/log(2))}\
-                           else {print $1, $2, $3, "0"}}\
-                           else {print $1, $2, $3, (log($4/$8))/log(2)}}' > $name"-log2FC.txt"
-        done
-    
-        # rev absolut count
-        nonControl=`ls $covdir/*-rev-absolut-ggb.txt | grep -v $control`
-        for i in $nonControl ; do
-            name=$(echo $i | sed 's/.txt//')
-            paste $i $covdir/$control-multi-counts-rev-absolut-ggb.txt |\
-            awk 'OFS="\t" {if($4 == 0 || $8 == 0)\
-                          {if($4 > $8){print $1, $2, $3, log($4)/log(2)}\
-                           else if($8 > $4){print $1, $2, $3, -1 * (log($8)/log(2))}\
-                           else {print $1, $2, $3, "0"}}\
-                           else {print $1, $2, $3, (log($4/$8))/log(2)}}' > $name"-log2FC.txt"
-        done
-    fi
 
     # fwd normalized count
     nonControl=`ls $covdir/*-fwd-normalized-ggb.txt | grep -v $control`
@@ -522,6 +469,11 @@ if [ ! -d $covdir ] ; then
                        else if($8 > $4){print $1, $2, $3, -1 * (log($8)/log(2))}\
                        else {print $1, $2, $3, "0"}}\
                        else {print $1, $2, $3, (log($4/$8))/log(2)}}' > $name"-log2FC.txt"
+
+        # converting to bedgraph
+        outname=$(echo $name | sed 's/-ggb//')
+        awk -v FS="\t" -v OFS="\t" '{print $1,$3-1,$3,$4}' $name"-log2FC.txt" > $outname"-log2FC.bedgraph"
+
     done
 
     # rev normalized count
@@ -534,6 +486,11 @@ if [ ! -d $covdir ] ; then
                        else if($8 > $4){print $1, $2, $3, -1 * (log($8)/log(2))}\
                        else {print $1, $2, $3, "0"}}\
                        else {print $1, $2, $3, (log($4/$8))/log(2)}}' > $name"-log2FC.txt"
+
+        # converting to bedgraph
+        outname=$(echo $name | sed 's/-ggb//')
+        awk -v FS="\t" -v OFS="\t" '{print $1,$3-1,$3,$4}' $name"-log2FC.txt" > $outname"-log2FC.bedgraph"
+
     done
 
     echo "Done!"
@@ -760,7 +717,8 @@ invertstrand [VARCHAR]:      flag indicating whether RNA-Seq data is from dUTP l
                              and should be inverted when computing genome-wide read depth
                              e.g.: y
 
-additionalPlots [VARCHAR]:   flag indicating whether additional read depth plots should be created;
+additionalPlots [VARCHAR]:   DEPRECATED (you can assign any character but it will take no effect)
+                             flag indicating whether additional read depth plots should be created;
                              if additionalPlots = y, the program will create additional coverage files
                              with non-normalized counts and normalized log2 counts
                              e.g.: n

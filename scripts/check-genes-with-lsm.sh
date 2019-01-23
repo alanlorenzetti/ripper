@@ -29,8 +29,10 @@ positionanalysisgenesdir=$5
 
 if [ ! -f $miscdir/$spp".gff" ] ; then
     curl -u anonymous: $annotURL 2> /dev/null |\
-    zcat > $miscdir/$spp".gff" || { echo >&2 "Annotation file download failed. Aborting" ; exit 1; }
+    zcat | awk -v FS="\t" -v OFS="\t" '{if($3 != "region"){print}}' \
+    > $miscdir/$spp"-full-annotation.gff" || { echo >&2 "Annotation file download failed. Aborting" ; exit 1; }
 
+    cp $miscdir/$spp"-full.gff" $miscdir/$spp".gff"
 	sed -i '/^#/d' $miscdir/$spp".gff"
 	awk -v OFS="\t" -v FS="\t" '{if($3 == "gene"){print}}' $miscdir/$spp".gff" > tmp1
 	mv tmp1 $miscdir/$spp".gff"
