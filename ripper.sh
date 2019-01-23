@@ -14,7 +14,7 @@
 # should not work before everything is set up
 ####################################
 
-version=0.3.0
+version=0.4.0
 lastupdate=20190123
 
 # please, check the README.md file before using this script
@@ -658,7 +658,7 @@ if [ ! -d $circlizedir ] ; then
     R --slave -q -f $scriptsdir/circlize.R --args $spp $miscdir $gccontentdir $correlationanalysisdir $circlizedir > /dev/null 2>&1
 fi
 
-echo "Done."
+echo "Done!"
 
 # continuing the help if-else statement
 else
