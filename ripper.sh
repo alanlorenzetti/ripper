@@ -656,9 +656,11 @@ if [ ! -d $circlizedir ] ; then
     mkdir $circlizedir
 
     R --slave -q -f $scriptsdir/circlize.R --args $spp $miscdir $gccontentdir $correlationanalysisdir $circlizedir > /dev/null 2>&1
+    echo "Done!"
 fi
 
-echo "Done!"
+endingDate=`date`
+echo "Everything done by $endingDate."
 
 # continuing the help if-else statement
 else
