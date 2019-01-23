@@ -98,7 +98,7 @@ e.g.:
 bash ripper.sh Hsalinarum control y 8 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
 
 if something goes wrong, one may remove all the directories and files created by this script by doing
-rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circos
+rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circlize
 
 " && exit 1
 
@@ -157,7 +157,7 @@ positionanalysisdir="positionAnalysis"
 positionanalysisgenesdir="positionAnalysisGenes"
 gccontentdir="gccontent"
 correlationanalysisdir="correlationAnalysis"
-circosdir="circos"
+circlizedir="circlize"
 
 ####################################
 # PROGRAM STAMP
@@ -179,7 +179,7 @@ echo "Call: $0 $@"
 ####################################
 
 # list of program dependencies
-dependencies="curl bedtools R infoseq hisat2 samtools mmr circos infoseq"
+dependencies="curl bedtools R infoseq hisat2 samtools mmr infoseq convert"
 
 echo "Checking dependencies..."
 
@@ -191,7 +191,7 @@ done
 if [ ! -e /opt/Trimmomatic-0.36/trimmomatic-0.36.jar ] ; then echo >&2 "trimmomatic isn't installed. Aborting" ; exit 1; fi
 
 # checking R packages
-rpackages="Rqc gplots MSG VennDiagram ggplot2"
+rpackages="Rqc gplots MSG VennDiagram ggplot2 circlize rtracklayer"
 
 for i in $rpackages ; do
     R --slave -e 'args=commandArgs(trailingOnly=T); if(!require(args[1], quietly=T, character.only=T)){quit(save="no", status=1)}else{quit(save="no", status=0)}' \
@@ -208,7 +208,7 @@ if [ "$positionAnalysis" == "y" ] ; then
 fi
 
 # checking scripts
-scripts="1stQC.R 2ndQC.R correlationAnalysis.R lsm-position.R lsm-positionGenes.R computeGC.sh createCircosFiles.sh circos.conf"
+scripts="1stQC.R 2ndQC.R correlationAnalysis.R lsm-position.R lsm-positionGenes.R computeGC.sh circlize.R"
 
 for i in $scripts ; do
     if [ ! -e $scriptsdir/$i ] ; then
@@ -648,31 +648,14 @@ if [ ! -d $correlationanalysisdir ] ; then
 fi
 
 ####################################
-# creating circos ideograms
+# creating circlize ideograms
 ####################################
-if [ ! -d $circosdir ] ; then
-    echo "Generating Circos Ideograms"
+if [ ! -d $circlizedir ] ; then
+    echo "Generating Circlize Ideograms"
 
-    mkdir $circosdir
-    bash $scriptsdir/createCircosFiles.sh $spp $positionAnalysis $miscdir $circosdir
-    
-    infoseq -only -name -length $miscdir/$spp.fa 2> /dev/null | tail -n +2 |\
-    while read replicon length ; do
-        name=$(echo $replicon | sed 's/\.[0-9]//')
-        unit=${#length}
-        if [ $unit -ge 7 ]
-        then
-            circos -conf $scriptsdir/circos.conf -param karyotype=$circosdir/$name"-karyotype.txt" -outputfile $circosdir/$name -silent
-        else
-            circos -conf $scriptsdir/circos.conf \
-                   -param karyotype=$circosdir/$name"-karyotype.txt" \
-                   -param ticks/multiplier="1e-3" \
-                   -param ticks/format="%.2f Kb" \
-                   -param ticks/tick/spacing="25000u" \
-                   -outputfile $circosdir/$name \
-                   -silent
-        fi
-    done
+    mkdir $circlizedir
+
+    R --slave -q -f $scriptsdir/circlize.R --args $spp $miscdir $gccontentdir $correlationanalysisdir $circlizedir > /dev/null 2>&1
 fi
 
 echo "Done."
@@ -745,7 +728,7 @@ e.g.:
 bash ripper.sh Hsalinarum control y 8 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
 
 if something goes wrong, one may remove all the directories and files created by this script by doing
-rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circos
+rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circlize
 
 ####################################
 REQUIRED FILES AND PROGRAMS
@@ -758,17 +741,18 @@ hisat2 v1.1.2 @ PATH
 samtools v1.3.1 @ PATH
 bedtools v2.21.0 @ PATH
 MMR default version @ PATH
-circos v0.69-6 @ PATH
 emboss v6.6.0.0
 R @ PATH (please, check the required packages below)
 
 R packages: 
 
 Rqc (BioConductor)
+rtracklayer (BioConductor)
 gplots (CRAN)
 MSG (CRAN)
 VennDiagram (CRAN)
 ggplot2 (CRAN)
+circlize (CRAN)
 
 files:
 
@@ -793,10 +777,9 @@ yourDirectory
     ├── 1stQC.R
     ├── 2ndQC.R
     ├── check-genes-with-lsm.sh
-    ├── circos.conf
+    ├── circlize.R
     ├── computeGC.sh
     ├── correlationAnalysis.R
-    ├── createCircosFiles.sh
     ├── lsm-positionGenes.R
     └── lsm-position.R
 
