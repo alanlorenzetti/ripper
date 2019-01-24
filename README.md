@@ -101,7 +101,7 @@ rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gcc
 
 ## Required programs and files
 
-programs:  
+### Programs:  
 
 bedtools v2.27.1 @ PATH  
 curl v7.47.0 @ PATH  
@@ -112,7 +112,7 @@ samtools v1.9 @ PATH
 trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar  
 R @ PATH (please, check the required packages below)  
 
-R packages:  
+### R packages:  
 
 Rqc (BioConductor)  
 rtracklayer (BioConductor)  
@@ -122,7 +122,7 @@ VennDiagram (CRAN)
 ggplot2 (CRAN)  
 circlize (CRAN)  
 
-required directory structure and files:  
+### Directory structure and files:  
 
 ```
 yourDirectory

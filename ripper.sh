@@ -701,7 +701,7 @@ echo '
 REQUIRED FILES AND PROGRAMS
 ####################################
 
-programs:
+Programs:
 
 bedtools v2.27.1 @ PATH
 curl v7.47.0 @ PATH
@@ -722,9 +722,7 @@ VennDiagram (CRAN)
 ggplot2 (CRAN)
 circlize (CRAN)
 
-files:
-
-required directory structure and files:
+Directory structure and files:
 
 yourDirectory
 ├── misc
