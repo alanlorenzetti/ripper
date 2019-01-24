@@ -10,6 +10,7 @@ miscdir = args[2]
 gccontentdir = args[3]
 correlationanalysisdir = args[4]
 circlizedir = args[5]
+positionAnalysis = args[6]
 
 # svg parameters?
 ht=10
@@ -59,24 +60,26 @@ for(repliconidx in 1:length(df$acc)){
   circos.initializeWithIdeogram(df[repliconidx,], plotType = c("labels","axis")[2], chromosome.index = df[repliconidx,1])
   
   ####regions IS plasmids#####
-  is = as.data.frame(rtracklayer::import(paste0(miscdir, "/", spp, "-ISSaga-checked.gff3")))
-  is$rpt_family = as.character(sub("\\+.*$", "", is$rpt_family))
-  isfamilies=unique(is$rpt_family)
-  bed_list = vector("list", length = length(isfamilies))
-  n=1
-  for(i in isfamilies){
-    bed_list[[n]] = is[is$rpt_family == i,c("seqnames", "start", "end")]
-    n=n+1
+  if(positionAnalysis == "y"){
+      is = as.data.frame(rtracklayer::import(paste0(miscdir, "/", spp, "-ISSaga-checked.gff3")))
+      is$rpt_family = as.character(sub("\\+.*$", "", is$rpt_family))
+      isfamilies=unique(is$rpt_family)
+      bed_list = vector("list", length = length(isfamilies))
+      n=1
+      for(i in isfamilies){
+        bed_list[[n]] = is[is$rpt_family == i,c("seqnames", "start", "end")]
+        n=n+1
+      }
+      
+      # plotting annotated IS regions
+      circos.genomicTrackPlotRegion(bed_list, ylim = c(0,1), track.height=0.075, bg.col = adjustcolor("white", alpha.f = 0.9),
+                                    panel.fun = function(region, value, ...) {
+                                      i=getI(...)
+                                      circos.genomicRect(region, value, col = "gray")
+                                    }
+      )
   }
-  
-  # plotting annotated IS regions
-  circos.genomicTrackPlotRegion(bed_list, ylim = c(0,1), track.height=0.075, bg.col = adjustcolor("white", alpha.f = 0.9),
-                                panel.fun = function(region, value, ...) {
-                                  i=getI(...)
-                                  circos.genomicRect(region, value, col = "gray")
-                                }
-  )
-  
+
   #####plotting gc content heat map#####
   if(genomewidegc == "y"){
     mingc=min(gc$V4)

@@ -1,4 +1,4 @@
-# Ripper: A tool to process Illumina RIP-Seq/HITS-CLIP data.
+# Ripper: A tool to process Illumina RIP-Seq/HITS-CLIP data
 
 ## Purpose and General Information
 
