@@ -103,24 +103,24 @@ rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gcc
 
 ### Programs:  
 
-bedtools v2.27.1 @ PATH  
-curl v7.47.0 @ PATH  
-emboss v6.6.0.0  
-hisat2 v2.1.0 @ PATH  
-MMR default version @ PATH (https://github.com/ratschlab/mmr)  
-samtools v1.9 @ PATH  
-trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar  
-R @ PATH (please, check the required packages below)  
+* bedtools v2.27.1 @ PATH  
+* curl v7.47.0 @ PATH  
+* emboss v6.6.0.0  
+* hisat2 v2.1.0 @ PATH  
+* MMR default version @ PATH (https://github.com/ratschlab/mmr)  
+* samtools v1.9 @ PATH  
+* trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar  
+* R @ PATH (please, check the required packages below)  
 
 ### R packages:  
 
-Rqc (BioConductor)  
-rtracklayer (BioConductor)  
-gplots (CRAN)  
-MSG (CRAN)  
-VennDiagram (CRAN)  
-ggplot2 (CRAN)  
-circlize (CRAN)  
+* Rqc (BioConductor)  
+* rtracklayer (BioConductor)  
+* gplots (CRAN)  
+* MSG (CRAN)  
+* VennDiagram (CRAN)  
+* ggplot2 (CRAN)  
+* circlize (CRAN)  
 
 ### Directory structure and files:  
 
