@@ -656,6 +656,13 @@ if [ ! -d $circlizedir ] ; then
     mkdir $circlizedir
 
     R --slave -q -f $scriptsdir/circlize.R --args $spp $miscdir $gccontentdir $correlationanalysisdir $circlizedir > /dev/null 2>&1
+
+    # workaround to remove Rplots.pdf created by the par() function
+    # in the script above; it is easier to remove it, rather to
+    # prevent its creation
+
+    rm Rplots.pdf
+
     echo "Done!"
 fi
 
