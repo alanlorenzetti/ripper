@@ -4,7 +4,7 @@
 
 This script will perform every task to analyze **prokaryotic** RIP-Seq/HITS-CLIP Illumina data. It was developed to find regions transcribing RNAs that bind to a coimmunoprecipitated protein and check if these regions are within Insertion Sequence (IS) regions.  
 
-A few downstream analyses are also performed, for example: finding the position of interaction regions relative to the annotated IS and genes (maybe a figure from my quali1); computing the correlation between AT-content and interaction region density; creating circular representations of AT-content and interaction regions density for each replicon.  
+A few downstream analyses are also performed, for example: finding the position of interaction regions relative to the annotated IS and genes; computing the correlation between AT-content and interaction region density; creating circular representations of AT-content and interaction regions density for each replicon.  
 
 The pipeline steps can be briefly described as:  
 

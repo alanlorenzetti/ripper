@@ -11,7 +11,7 @@
 # and getting results about RNAs derived from Insertion Sequences and Genes
 # that interact with this protein in vivo
 #
-# it relies on many scripts, files and programs, and therefore the setting up
+# it relies on many other scripts, files and programs, and therefore the setting up
 # is quite complicated. Nevertheless, the tool is aware of required files and
 # should not work before everything is set up
 ####################################
@@ -724,13 +724,6 @@ circlize (CRAN)
 
 files:
 
-IS annotation contained in misc directory
-scripts contained in misc directory
-adap fasta adap.fa contained in misc directory
-raw data (below) contained in the raw directory
-rip fastq rip.fastq.gz (single-end Illumina sequencing)
-control fastq control.fastq.gz (single-end Illumina sequencing)
-
 required directory structure and files:
 
 yourDirectory
@@ -738,7 +731,7 @@ yourDirectory
 │   ├── adap.fa
 │   └── Hsalinarum-ISSaga-checked.gff3
 ├── raw
-│   ├── <control_lib>.fastq.gz
+│   ├── control.fastq.gz
 │   └── rip.fastq.gz
 ├── ripper.sh
 └── scripts
@@ -750,6 +743,17 @@ yourDirectory
     ├── correlationAnalysis.R
     ├── lsm-positionGenes.R
     └── lsm-position.R
+
+adap.fa must be a fasta file containing what adapters would look like if they are sequenced. For more information, check https://support.illumina.com/bulletins/2016/12/what-sequences-do-i-use-for-adapter-trimming.html
+
+The file must look like:
+
+>TruSeq_indexed_adapter
+AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+
+<spp>-ISSaga-checked.gff3 must be a gff3 annotation file containing only insertion sequences. In order to work properly, the attributes field must be exactly the same order as the example below (ID= ; Name= ; rpt_family= ). You can also disable this step by setting positionAnalysis=n.
+
+NC_001869.1 artemis mobile_element  1718    5019    .   -   .   ID=GenBank:repeat_region:NC_001869:1718:5019.repeat_region;Name=ISH7A;rpt_family=ISNCY
 
 several directories and files will be created during the execution and they will be placed
 majorly in "yourDirectory" and "misc"
