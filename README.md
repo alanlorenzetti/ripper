@@ -2,7 +2,7 @@
 
 ## Purpose and General Information
 
-This script will perform every task to analyze **prokaryotic** RIP-Seq/HITS-CLIP Illumina data. It was developed to find regions transcribing RNAs that bind to a coimmunoprecipitated protein and check if these regions are within Insertion Sequence (IS) regions.  
+This pipeline will perform every task to analyze **prokaryotic** RIP-Seq/HITS-CLIP Illumina data. It was developed to find regions transcribing RNAs that bind to a coimmunoprecipitated protein and check if these regions are within Insertion Sequence (IS) regions.  
 
 A few downstream analyses are also performed, for example: finding the position of interaction regions relative to the annotated IS and genes; computing the correlation between AT-content and interaction region density; creating circular representations of AT-content and interaction regions density for each replicon.  
 
@@ -153,7 +153,7 @@ The file must look like:
 AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
 ```
 
-**<spp>-ISSaga-checked.gff3** must be a gff3 annotation file containing only insertion sequences. In order to work properly, the attributes field must be exactly the same order as the example below (ID= ; Name= ; rpt_family= ). You can also disable this step by setting positionAnalysis=n.  
+**\<spp\>-ISSaga-checked.gff3** must be a gff3 annotation file containing only insertion sequences. In order to work properly, the attributes field must be exactly the same order as the example below (ID= ; Name= ; rpt_family= ). You can also disable this step by setting positionAnalysis=n.  
 
 ```
 NC_001869.1 artemis mobile_element  1718    5019    .   -   .   ID=GenBank:repeat_region:NC_001869:1718:5019.repeat_region;Name=ISH7A;rpt_family=ISNCY
@@ -165,11 +165,11 @@ several directories and files will be created during the execution and they will
 ```
                                      __..--"".          .""--..__             
                                _..-``        /\        /\        ``-.._       
-                           _.-`           __/\C\      / /\__           `-._   
-                        .-`     __..---```    \O\    / /    ```---..__     `-.
-                      .`  _.--``               \B\  / /               ``--._  `.
-                     / .-`                      \H\/ /                      `-. \
-                    /.`                          \C\/                          `.\
+                           _.-`           __/\c\      / /\__           `-._   
+                        .-`     __..---```    \o\    / /    ```---..__     `-.
+                      .`  _.--``               \b\  / /               ``--._  `.
+                     / .-`                      \h\/ /                      `-. \
+                    /.`                          \c\/                          `.\
                     ´                            /\ \                            `
 
 ```
