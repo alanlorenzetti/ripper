@@ -89,12 +89,11 @@ for(repliconidx in 1:length(df$acc)){
   }
   
   col=colorRamp2(c(mingc,meangc,maxgc), c("green", "black", "red"))
-  circos.genomicHeatmap(gc, col = col, numeric.column = 4, connection_height = 0.0001, heatmap_height = 0.1)
+  circos.genomicHeatmap(gc, col = col, numeric.column = 4, connection_height = 10^-5, heatmap_height = 0.1)
   
   #####lsm density heat map#####
-  col=colorRamp2(c(0,1), c("white", "red"))
-  circos.genomicHeatmap(lsm, col = col, numeric.column = 4, connection_height = 0.0001, heatmap_height = 0.1)
-  # need a border down here
+  col=colorRamp2(c(0,1), c("black", "red"))
+  circos.genomicHeatmap(lsm, col = col, numeric.column = 4, connection_height = 10^-5, heatmap_height = 0.1)
   
   # closing dev to save plot
   dev.off()
