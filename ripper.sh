@@ -33,7 +33,7 @@ spp [VARCHAR]:               prefix used by the script to read and write target 
                              by the same means, the IS annotation file should be
                              Hsalinarum-ISSaga-checked.gff3
 
-control_lib [VARCHAR]:       DEPRECATED. (you must assign any character, but it will take no effect).
+control_lib [VARCHAR]:       DEPRECATED (you must assign any character, but it will take no effect).
                              this was an option before, but now is hard coded.
                              e.g.: control
 
