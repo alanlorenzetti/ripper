@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# alorenzetti 
+# alorenzetti
+# built and tested on Ubuntu 16.04.5 LTS 64bit
+# also tested on Ubuntu 18.04.1
 
 ####################################
 # Ripper's brief description
