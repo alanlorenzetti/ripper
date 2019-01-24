@@ -29,15 +29,16 @@ bash ripper.sh <spp> <control_lib> <positionAnalysis> <threads> <genomeURL> <rea
 
 spp [VARCHAR]:               prefix used by the script to read and write target files.
                              I advise the use of species name. e.g.: Hsalinarum
-                             the hisat2 indexes will be set as misc/Hsalinarum.1.ebwt .
+                             the hisat2 indexes will be set as misc/Hsalinarum.1.ht2 .
                              by the same means, the IS annotation file should be
                              Hsalinarum-ISSaga-checked.gff3
 
-control_lib [VARCHAR]:       prefix used to read the control fastq file.
+control_lib [VARCHAR]:       DEPRECATED. (you must assign any character, but it will take no effect).
+                             this was an option before, but now is hard coded.
                              e.g.: control
 
 positionAnalysis [VARCHAR]:  flag indicating whether position analysis will be performed
-                             for IS and genes; do not use it if you does not have IS annotation files
+                             for IS and genes; do not use it if you do not have IS annotation files
                              e.g.: y
 
 threads [INT]:               number of threads passed to R in quality control,
@@ -58,7 +59,7 @@ invertstrand [VARCHAR]:      flag indicating whether RNA-Seq data is from dUTP l
                              and should be inverted when computing genome-wide read depth
                              e.g.: y
 
-additionalPlots [VARCHAR]:   DEPRECATED (you can assign any character but it will take no effect)
+additionalPlots [VARCHAR]:   DEPRECATED (you must assign any character but it will take no effect).
                              flag indicating whether additional read depth plots should be created;
                              if additionalPlots = y, the program will create additional coverage files
                              with non-normalized counts and normalized log2 counts
@@ -114,7 +115,7 @@ fi
 # ARGUMENT VARIABLES
 ####################################
 spp=${1}
-control=${2}
+#control=${2} # DEPRECATED
 positionAnalysis=${3} # choose if IS position analysis will be performed
 threads=${4} # choose how many threads to be used
 
@@ -135,8 +136,7 @@ if [ $invertstrand == "y" ] ; then
     hisatstrand="FR"
 fi
 
-# additionalPlots=${9} # DEPRECATED
-additionalPlots="n" # not read from user input anymore
+#additionalPlots=${9} # DEPRECATED
 windowsize=${10} # these two parameters for GC content computation
 stepsize=${11}
 
@@ -163,6 +163,10 @@ positionanalysisgenesdir="positionAnalysisGenes"
 gccontentdir="gccontent"
 correlationanalysisdir="correlationAnalysis"
 circlizedir="circlize"
+
+# control and additionalPlots are not set by user anymore
+control="control"
+additionalPlots="n"
 
 ####################################
 # PROGRAM STAMP
