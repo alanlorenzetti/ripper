@@ -18,7 +18,7 @@ The pipeline steps can be briefly described as:
 8. Creating annotation of interaction regions  
 9. Finding the position of interaction regions relative to annotated insertion sequences and genes  
 10. Computing correlation between AT-content and density of interaction regions  
-11. Plotting circular representations of AT-content and interaction regions density for each replicon  
+11. Plotting circular representations of AT-content and density of interaction regions for each replicon  
 
 **Warning**  
 
