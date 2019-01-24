@@ -499,109 +499,113 @@ fi
 ####################################
 # ENTERING NEW PROGRAM: createInTracks.sh 
 ####################################
-echo "Creating regions of interaction"
+if [ ! -f interaction-regions-entire-genome-fwd.gff3 ] ; then
+    echo "Creating regions of interaction"
 
-# this program creates regions of interaction (GFF3)
-# based on the log2FC files
+    # this program creates regions of interaction (GFF3)
+    # based on the log2FC files
 
-## functional variables
-flag=0
-n=0
+    ## functional variables
+    flag=0
+    n=0
 
-# fwd processing
-strandname=fwd
-for i in $covdir/*fwd-normalized-ggb-log2FC.txt ; do
-    sort -Vk1,1 -Vk3,3 $i |\
-    awk -v flag=$flag -v minsize=$minsize -v strandname=$strandname -v threshold=$threshold 'OFS="\t" {\
+    # fwd processing
+    strandname=fwd
+    for i in $covdir/*fwd-normalized-ggb-log2FC.txt ; do
+        sort -Vk1,1 -Vk3,3 $i |\
+        awk -v flag=$flag -v minsize=$minsize -v strandname=$strandname -v threshold=$threshold 'OFS="\t" {\
+                if($4 >= threshold){\
+                    if(flag == 0){\
+                        oldacc=$1;\
+                        oldstrand=$2;\
+                        oldpos=$3;\
+                        oldscore=$4;\
+                        startpos=$3;\
+                        flag+=1\
+                    }else{\
+                        if(oldacc == $1 && $3 == oldpos+1){\
+                            oldacc=$1;\
+                            oldstrand=$2;\
+                            oldpos=$3;\
+                            oldscore+=$4\
+                        }else{\
+                            if(oldpos-startpos+1 >= minsize){\
+                                meanscore=oldscore/(oldpos-startpos+1);\
+                                print oldacc,"in_house","misc_feature",startpos,oldpos,meanscore,oldstrand,".","ID=""Lsm_interaction_"strandname"_"flag;\
+                                oldacc=$1;\
+                                oldstrand=$2;\
+                                oldpos=$3;\
+                                oldscore=$4;\
+                                startpos=$3;\
+                                flag += 1\
+                            }else{\
+                                oldacc=$1;\
+                                oldstrand=$2;\
+                                oldpos=$3;\
+                                oldscore=$4;\
+                                startpos=$3\
+                            }
+                        }
+                    }
+                }
+            }'
+    done > "interaction-regions-entire-genome-"$strandname".gff3"
+
+    # rev processing
+    strandname=rev
+    for i in $covdir/*rev-normalized-ggb-log2FC.txt ; do
+        sort -Vk1,1 -Vk3,3 $i |\
+        awk -v flag=$flag -v minsize=$minsize -v strandname=$strandname -v threshold=$threshold 'OFS="\t" {\
             if($4 >= threshold){\
-                if(flag == 0){\
-                    oldacc=$1;\
-                    oldstrand=$2;\
-                    oldpos=$3;\
-                    oldscore=$4;\
-                    startpos=$3;\
-                    flag+=1\
-                }else{\
-                    if(oldacc == $1 && $3 == oldpos+1){\
+                    if(flag == 0){\
                         oldacc=$1;\
                         oldstrand=$2;\
                         oldpos=$3;\
-                        oldscore+=$4\
+                        oldscore=$4;\
+                        startpos=$3;\
+                        flag+=1\
                     }else{\
-                        if(oldpos-startpos+1 >= minsize){\
-                            meanscore=oldscore/(oldpos-startpos+1);\
-                            print oldacc,"in_house","misc_feature",startpos,oldpos,meanscore,oldstrand,".","ID=""Lsm_interaction_"strandname"_"flag;\
+                        if(oldacc == $1 && $3 == oldpos+1){\
                             oldacc=$1;\
                             oldstrand=$2;\
                             oldpos=$3;\
-                            oldscore=$4;\
-                            startpos=$3;\
-                            flag += 1\
+                            oldscore+=$4\
                         }else{\
-                            oldacc=$1;\
-                            oldstrand=$2;\
-                            oldpos=$3;\
-                            oldscore=$4;\
-                            startpos=$3\
+                            if(oldpos-startpos+1 >= minsize){\
+                                meanscore=oldscore/(oldpos-startpos+1);\
+                                print oldacc,"in_house","misc_feature",startpos,oldpos,meanscore,oldstrand,".","ID=""Lsm_interaction_"strandname"_"flag;\
+                                oldacc=$1;\
+                                oldstrand=$2;\
+                                oldpos=$3;\
+                                oldscore=$4;\
+                                startpos=$3;\
+                                flag += 1\
+                            }else{\
+                                oldacc=$1;\
+                                oldstrand=$2;\
+                                oldpos=$3;\
+                                oldscore=$4;\
+                                startpos=$3\
+                            }
                         }
                     }
                 }
-            }
-        }'
-done > "interaction-regions-entire-genome-"$strandname".gff3"
+            }'
+    done > "interaction-regions-entire-genome-"$strandname".gff3"
 
-# rev processing
-strandname=rev
-for i in $covdir/*rev-normalized-ggb-log2FC.txt ; do
-    sort -Vk1,1 -Vk3,3 $i |\
-    awk -v flag=$flag -v minsize=$minsize -v strandname=$strandname -v threshold=$threshold 'OFS="\t" {\
-        if($4 >= threshold){\
-                if(flag == 0){\
-                    oldacc=$1;\
-                    oldstrand=$2;\
-                    oldpos=$3;\
-                    oldscore=$4;\
-                    startpos=$3;\
-                    flag+=1\
-                }else{\
-                    if(oldacc == $1 && $3 == oldpos+1){\
-                        oldacc=$1;\
-                        oldstrand=$2;\
-                        oldpos=$3;\
-                        oldscore+=$4\
-                    }else{\
-                        if(oldpos-startpos+1 >= minsize){\
-                            meanscore=oldscore/(oldpos-startpos+1);\
-                            print oldacc,"in_house","misc_feature",startpos,oldpos,meanscore,oldstrand,".","ID=""Lsm_interaction_"strandname"_"flag;\
-                            oldacc=$1;\
-                            oldstrand=$2;\
-                            oldpos=$3;\
-                            oldscore=$4;\
-                            startpos=$3;\
-                            flag += 1\
-                        }else{\
-                            oldacc=$1;\
-                            oldstrand=$2;\
-                            oldpos=$3;\
-                            oldscore=$4;\
-                            startpos=$3\
-                        }
-                    }
-                }
-            }
-        }'
-done > "interaction-regions-entire-genome-"$strandname".gff3"
+    echo "Done!"
 
-echo "Done!"
+fi
 
 ####################################
 # performing position analysis
 ####################################
 # for insertion sequences and genes
 if [ "$positionAnalysis" == "y" ] ; then
-    echo "Performing position analysis"
-
+    
     if [ ! -d $positionanalysisdir ] ; then
+        echo "Performing position analysis"
+
         mkdir $positionanalysisdir
 
         # getting intersections between IS file and interaction regions
@@ -613,6 +617,8 @@ if [ "$positionAnalysis" == "y" ] ; then
 
         # generating heatmaps for lsm position
         R --slave -q -f $scriptsdir/lsm-position.R --args $spp $miscdir $positionanalysisdir > /dev/null 2>&1
+
+        echo "Done!"
     fi
 
     if [ ! -d $positionanalysisgenesdir ] ; then
@@ -620,7 +626,6 @@ if [ "$positionAnalysis" == "y" ] ; then
         bash $scriptsdir/check-genes-with-lsm.sh $spp $annotURL $miscdir $scriptsdir $positionanalysisgenesdir
     fi
 
-    echo "Done!"
 fi
 
 ####################################
