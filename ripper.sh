@@ -669,6 +669,7 @@ fi
 # creating circlize ideograms
 ####################################
 if [ ! -d $circlizedir ] ; then
+ 
     echo "Generating circlize ideograms"
 
     mkdir $circlizedir

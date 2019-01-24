@@ -60,6 +60,7 @@ for(repliconidx in 1:length(df$acc)){
   circos.initializeWithIdeogram(df[repliconidx,], plotType = c("labels","axis")[2], chromosome.index = df[repliconidx,1])
   
   ####regions IS plasmids#####
+  # only if IS annotation is available
   if(positionAnalysis == "y"){
       is = as.data.frame(rtracklayer::import(paste0(miscdir, "/", spp, "-ISSaga-checked.gff3")))
       is$rpt_family = as.character(sub("\\+.*$", "", is$rpt_family))
