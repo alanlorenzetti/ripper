@@ -19,7 +19,7 @@ lastupdate=20190124
 
 # please, check the README.md file before using this script
 # there is also a version of the manual on the end of this file
-# which can be accessed using ./frtc.sh --help
+# which can be accessed using "bash ripper.sh --help"
 
 function echoHelp {
     echo '
@@ -124,7 +124,6 @@ readsize=${6} # mean readsize to input in mmr
 if [ ${7} == "y" ] ; then
     strandspecific="-S" ; else
     strandspecific=" "
-    hisatstrand="FR"
 fi
 
 invertstrand=${8}
@@ -291,16 +290,20 @@ if [ ! -d $samdir ] ; then
         prefix=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/.fastq.gz$//")
         out=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq.gz$/sam/")
         log=$(echo $i | sed "s/^$trimmeddir/$samdir/;s/fastq.gz$/log/")
+
+        # the --rna-strandness parameter does not interfere in output BAM
+        # it just adds a tag for each aligned read explaining the strand
+        # of RNA in the sample
         hisat2 --no-spliced-alignment \
-                       --no-softclip \
+               --no-softclip \
                --rdg 1000,1 \
                --rfg 1000,1 \
-                       --rna-strandness $hisatstrand \
-                       -k 1000 \
-                       -p $threads \
-                       -x $miscdir/$spp \
-                       -U $i \
-                       --summary-file $log > $out 
+               --rna-strandness $hisatstrand \
+               -k 1000 \
+               -p $threads \
+               -x $miscdir/$spp \
+               -U $i \
+               --summary-file $log > $out 
     done
 
     echo "Done!"
