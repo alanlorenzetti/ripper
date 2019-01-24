@@ -14,29 +14,15 @@
 # should not work before everything is set up
 ####################################
 
-version=0.4.0
-lastupdate=20190123
+version=0.4.1
+lastupdate=20190124
 
 # please, check the README.md file before using this script
 # there is also a version of the manual on the end of this file
 # which can be accessed using ./frtc.sh --help
 
-# starting an if statement to show the help
-# which is presented on the end of the file
-# this if statement only ends on the end of
-# this script
-if [ "$1" != "--help" ] ; then
-
-# showing usage hints if no arguments are supplied
-if [ $# -ne 13 ] ; then echo "
-
-Ripper:
-A tool to process Illumina RIP-Seq/HITS-CLIP data.
-Version: $version
-Last update: $lastupdate
-
-Usage:
-
+function echoHelp {
+    echo '
 bash ripper.sh <spp> <control_lib> <positionAnalysis> <threads> <genomeURL> <readsize> <strandspecific> <invertstrand> <additionalPlots> <windowsize> <stepsize> <log2fcthreshold> <minlength>
 
 spp [VARCHAR]:               prefix used by the script to read and write target files.
@@ -98,9 +84,27 @@ e.g.:
 bash ripper.sh Hsalinarum control y 8 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
 
 if something goes wrong, one may remove all the directories and files created by this script by doing
-rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circlize
+rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circlize'
+}
 
-" && exit 1
+# starting an if statement to show the help
+# which is presented on the end of the file
+# this if statement only ends on the end of
+# this script
+if [ "$1" != "--help" ] ; then
+
+# showing usage hints if no arguments are supplied
+if [ $# -ne 13 ] ; then
+
+echo "
+Ripper:
+A tool to process Illumina RIP-Seq/HITS-CLIP data.
+Version: $version
+Last update: $lastupdate
+
+Usage:"
+
+echoHelp && exit 1
 
 fi
 
@@ -179,7 +183,7 @@ echo "Call: $0 $@"
 ####################################
 
 # list of program dependencies
-dependencies="curl bedtools R infoseq hisat2 samtools mmr infoseq convert"
+dependencies="curl bedtools R infoseq hisat2 samtools mmr"
 
 echo "Checking dependencies..."
 
@@ -679,83 +683,24 @@ else
 echo '
 ####################################
 # USAGE MANUAL
-####################################
+####################################'
 
-bash ripper.sh <spp> <control_lib> <positionAnalysis> <threads> <genomeURL> <readsize> <strandspecific> <invertstrand> <additionalPlots> <windowsize> <stepsize> <log2fcthreshold> <minlength>
+echoHelp
 
-spp [VARCHAR]:               prefix used by the script to read and write target files.
-                             I advise the use of species name. e.g.: Hsalinarum
-                             the hisat2 indexes will be set as misc/Hsalinarum.1.ebwt .
-                             by the same means, the IS annotation file should be
-                             Hsalinarum-ISSaga-checked.gff3
-
-control_lib [VARCHAR]:       prefix used to read the control fastq file.
-                             e.g.: control
-
-positionAnalysis [VARCHAR]:  flag indicating whether position analysis will be performed
-                             for IS and genes; do not use it if you does not have IS annotation files
-                             e.g.: y
-
-threads [INT]:               number of threads passed to R in quality control,
-                             trimmomatic, hisat2, samtools and mmr
-                             e.g.: 8
-
-genomeURL [VARCHAR]:         URL to the NCBI RefSeq FTP.
-                             it is used to get the reference genome and annotation files
-                             e.g.: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz
-
-readsize [INT]:              mean read size passed to mmr.
-                             e.g.: 50
-
-strandspecific [VARCHAR]:    flag indicating whether RNA-Seq data is stranded or not
-                             e.g.: y
-
-invertstrand [VARCHAR]:      flag indicating whether RNA-Seq data is from dUTP libraries
-                             and should be inverted when computing genome-wide read depth
-                             e.g.: y
-
-additionalPlots [VARCHAR]:   DEPRECATED (you can assign any character but it will take no effect)
-                             flag indicating whether additional read depth plots should be created;
-                             if additionalPlots = y, the program will create additional coverage files
-                             with non-normalized counts and normalized log2 counts
-                             e.g.: n
-
-windowsize [INT]:            size of windows while computing genome AT content
-                             and RNA Binding Protein (RBP) density
-                             e.g.: 250
-
-stepsize [INT]:              size of step while computing genome AT content and RBP density
-                             e.g.: 250
-
-log2fcthreshold [INT]:       threshold used to identify which regions interact with given RBP;
-                             for example using log2fcthreshold = 2, means that the program will
-                             consider a base bound to RBP only if a position satisfies
-                             rip count/control count >= 4.
-                             e.g.: 2
-
-minlength [INT]:             minimum length of transcript fragments interacting with RBP;
-                             for example, if minlength = 10, the program will create fragments
-                             only if there are at least 10 consecutive bases satisfying log2fcthreshold
-                             e.g.: 10
-
-e.g.:
-bash ripper.sh Hsalinarum control y 8 ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/805/GCF_000006805.1_ASM680v1/GCF_000006805.1_ASM680v1_genomic.fna.gz 50 y y n 250 250 2 10
-
-if something goes wrong, one may remove all the directories and files created by this script by doing
-rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gccontent correlationAnalysis circlize
-
+echo '
 ####################################
 REQUIRED FILES AND PROGRAMS
 ####################################
 
 programs:
 
-trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar
-hisat2 v1.1.2 @ PATH
-samtools v1.3.1 @ PATH
-bedtools v2.21.0 @ PATH
-MMR default version @ PATH
+bedtools v2.27.1 @ PATH
+curl v7.47.0 @ PATH
 emboss v6.6.0.0
+hisat2 v2.1.0 @ PATH
+MMR default version @ PATH (https://github.com/ratschlab/mmr)
+samtools v1.9 @ PATH
+trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar
 R @ PATH (please, check the required packages below)
 
 R packages: 
@@ -799,7 +744,6 @@ yourDirectory
 
 several directories and files will be created during the execution and they will be placed
 majorly in "yourDirectory" and "misc"
-
 '
 
 fi
