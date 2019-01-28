@@ -102,6 +102,7 @@ if [ $# -ne 13 ] ; then
 echo "
 Ripper:
 A tool to process Illumina RIP-Seq/HITS-CLIP data.
+https://github.com/alanlorenzetti/ripper
 Version: $version
 Last update: $lastupdate
 
@@ -173,6 +174,7 @@ additionalPlots="n"
 ####################################
 echo "Ripper:
 A tool to process Illumina RIP-Seq/HITS-CLIP data.
+https://github.com/alanlorenzetti/ripper
 Version: $version
 Last update: $lastupdate"
 
