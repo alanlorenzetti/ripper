@@ -54,8 +54,8 @@ if(file.size("interaction-regions-fwd.gff3") == 0 & file.size("interaction-regio
 ## loading ISSaga gff3
 IS = read.delim(paste0(miscdir, "/", spp,"-ISSaga-checked.gff3"), header=FALSE, row.names = NULL)
 
-# subsetting mobile_elements
-IS = IS[IS[,3] == "mobile_element",]; rownames(IS) = NULL
+# subsetting mobile elements
+IS = IS[IS[,3] == "mobile_element" | IS[,3] == "mobile_genetic_element" ,]; rownames(IS) = NULL
 IS[,4] = as.numeric(IS[,4])
 IS[,5] = as.numeric(IS[,5])
 

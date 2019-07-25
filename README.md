@@ -156,7 +156,7 @@ AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
 **\<spp\>-ISSaga-checked.gff3** must be a gff3 annotation file containing only insertion sequences. In order to work properly, the attributes field must be exactly the same order as the example below (ID= ; Name= ; rpt_family= ). You can also disable this step by setting positionAnalysis=n.  
 
 ```
-NC_001869.1 artemis mobile_element  1718    5019    .   -   .   ID=GenBank:repeat_region:NC_001869:1718:5019.repeat_region;Name=ISH7A;rpt_family=ISNCY
+NC_001869.1 artemis mobile_genetic_element  1718    5019    .   -   .   ID=GenBank:repeat_region:NC_001869:1718:5019.repeat_region;Name=ISH7A;rpt_family=ISNCY
 ```
 
 several directories and files will be created during the execution and they will be placed majorly in "yourDirectory" and "misc".  
