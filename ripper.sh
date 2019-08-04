@@ -16,8 +16,8 @@
 # should not work before everything is set up
 ####################################
 
-version=0.4.1
-lastupdate=20190124
+version=0.4.2
+lastupdate=20190804
 
 # please, check the README.md file before using this script
 # there is also a version of the manual on the end of this file

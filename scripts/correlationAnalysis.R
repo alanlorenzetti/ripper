@@ -67,8 +67,8 @@ scatterPlot = function(df){
     scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, length.out = 5)) +
     xlab(paste("AT content per", windowsize, "bp window")) +
     ylab(paste("RBP density per", windowsize, "bp window")) +
-#   geom_point(alpha = 0.5, shape=1) +
-    geom_density2d(col = "black") +
+    geom_point(alpha = 0.25, shape=20, cex=0.7) +
+#   geom_density2d(col = "black") +
     geom_smooth(method = "lm", formula = y ~ x, se = T, col = "black") +
     facet_grid(. ~ V1) +
     geom_vline(aes(xintercept = meanAT), col="red", data=meandf) +
