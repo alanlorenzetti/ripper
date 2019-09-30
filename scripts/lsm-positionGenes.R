@@ -1,5 +1,5 @@
-# alorenzetti jan 2019
-# v0.2
+# alorenzetti set 2019
+# v0.3
 
 # this script was adapted from a previous one
 # which analyzed lsm interaction positions in IS
@@ -37,6 +37,8 @@ if(!require("gplots")){install.packages("gplots", repos="https://vps.fmvz.usp.br
 if(!require("MSG")){install.packages("MSG", repos="https://vps.fmvz.usp.br/CRAN/")}; library("MSG")
 # VennDiagram
 if(!require("VennDiagram")){install.packages("VennDiagram", repos="https://vps.fmvz.usp.br/CRAN/")}; library("VennDiagram")
+# rtracklayer
+if(!require("rtracklayer")){library("BiocManager"); BiocManager::install("rtracklayer")} ; library("rtracklayer")
 
 ## misc settings
 # gffheader = c("chr", "source", "key", "start", "end", "score", "strand", "phase", "att")
@@ -48,16 +50,13 @@ lsm = read.delim(args[1], header = FALSE, row.names = NULL)
 #lsm = read.delim("interaction-regions-genes.gff3", header = FALSE, row.names = NULL)
 
 ## loading NCBI gff3
-IS = read.table(args[2], header=FALSE, row.names = NULL, sep="\t")
-#IS = read.table("Hsalinarum-annot.gff3", header=FALSE, row.names = NULL, sep="\t")
+IS = rtracklayer::import(args[2], format = "gff")
+IS = as.data.frame(IS)
 
 # subsetting genes
-IS = IS[IS[,3] == "gene",]; rownames(IS) = NULL
-IS[,4] = as.numeric(IS[,4])
-IS[,5] = as.numeric(IS[,5])
-
-# adjusting att col
-IS$V9 = gsub("\\+", " ", IS$V9)
+IS = IS[IS[,"type"] == "gene",]; rownames(IS) = NULL
+IS[,"start"] = as.numeric(IS[,"start"])
+IS[,"end"] = as.numeric(IS[,"end"])
 
 # creating table to store results
 results = NULL
@@ -74,11 +73,11 @@ if(!file.exists(paste0(positionanalysisgenesdir,"/results.csv"))){
   for(i in 1:dim(IS)[1]){
     # parsing gene table
     ISline = IS[i,]
-    ISchr = as.character(ISline$V1)
-    ISstart = as.numeric(ISline$V4)
-    ISend = as.numeric(ISline$V5)
-    ISstrand = as.character(ISline$V7)
-    ISname = sub(".*;Name=(.*?)\\;.*$", "\\1", as.character(ISline$V9), perl = TRUE)
+    ISchr = as.character(ISline$seqnames)
+    ISstart = as.numeric(ISline$start)
+    ISend = as.numeric(ISline$end)
+    ISstrand = as.character(ISline$strand)
+    ISname = as.character(ISline$locus_tag)
   
     # setting pct
     ISpct = (ISend - ISstart + 1) * pct ; ISpct = round(ISpct)
@@ -141,7 +140,7 @@ if(!file.exists(paste0(positionanalysisgenesdir,"/results.csv"))){
     
     # for gene on minus strand I must invert antisense counts
     # gamb
-    if(ISline$V7 == "+"){
+    if(ISline$strand == "+"){
       results = rbind(results, c(ISchr, ISstart, ISend, ISstrand, ISname,
                                  sone, stwo, sthree, sfour, sfive,
                                  asone, astwo, asthree, asfour, asfive))

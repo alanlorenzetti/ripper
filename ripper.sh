@@ -17,7 +17,7 @@
 ####################################
 
 version=0.4.2
-lastupdate=20190804
+lastupdate=20190930
 
 # please, check the README.md file before using this script
 # there is also a version of the manual on the end of this file
