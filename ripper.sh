@@ -199,7 +199,7 @@ for i in $dependencies ; do
     command -v $i > /dev/null >&1 || { echo >&2 "$i isn't installed. Aborting" ; exit 1; }
 done 
 
-if [ ! -e /opt/Trimmomatic-0.36/trimmomatic-0.36.jar ] ; then echo >&2 "trimmomatic isn't installed. Aborting" ; exit 1; fi
+if [ ! -e /opt/Trimmomatic-0.39/trimmomatic-0.39.jar ] ; then echo >&2 "trimmomatic isn't installed. Aborting" ; exit 1; fi
 
 # checking R packages
 rpackages="Rqc gplots MSG VennDiagram ggplot2 circlize rtracklayer"
@@ -255,7 +255,7 @@ if [ ! -d $trimmeddir ] ; then
     for i in $rawdir/*.fastq.gz ; do
         out=$(echo $i | sed "s/^$rawdir/$trimmeddir/g")
         log=$(echo $i | sed "s/^$rawdir/$trimmeddir/g;s/.fastq.gz$/.log/")
-        java -jar /opt/Trimmomatic-0.36/trimmomatic-0.36.jar SE -threads $threads $i $out ILLUMINACLIP:$miscdir/adap.fa:2:30:10 SLIDINGWINDOW:5:28 MINLEN:15 > $log 2>&1
+        java -jar /opt/Trimmomatic-0.39/trimmomatic-0.39.jar SE -threads $threads $i $out ILLUMINACLIP:$miscdir/adap.fa:2:30:10 SLIDINGWINDOW:5:28 MINLEN:15 > $log 2>&1
     done
 
     echo "Done!"
@@ -712,7 +712,7 @@ emboss v6.6.0.0
 hisat2 v2.1.0 @ PATH
 MMR default version @ PATH (https://github.com/ratschlab/mmr)
 samtools v1.9 @ PATH
-trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar
+trimmomatic v0.39 @ /opt/Trimmomatic-0.39/trimmomatic-0.39.jar
 R @ PATH (please, check the required packages below)
 
 R packages: 

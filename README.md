@@ -109,7 +109,7 @@ rm -r 1stQC 2ndQC trimmed sam bam cov positionAnalysis positionAnalysisGenes gcc
 * hisat2 v2.1.0 @ PATH  
 * MMR default version @ PATH (https://github.com/ratschlab/mmr)  
 * samtools v1.9 @ PATH  
-* trimmomatic v0.36 @ /opt/Trimmomatic-0.36/trimmomatic-0.36.jar  
+* trimmomatic v0.39 @ /opt/Trimmomatic-0.39/trimmomatic-0.39.jar  
 * R @ PATH (please, check the required packages below)  
 
 ### R packages:  
