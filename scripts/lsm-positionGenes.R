@@ -54,7 +54,7 @@ IS = rtracklayer::import(args[2], format = "gff")
 IS = as.data.frame(IS)
 
 # subsetting genes
-IS = IS[IS[,"type"] == "gene",]; rownames(IS) = NULL
+IS = IS[IS[,"type"] == "gene" | IS[,"type"] == "5UTR",]; rownames(IS) = NULL
 IS[,"start"] = as.numeric(IS[,"start"])
 IS[,"end"] = as.numeric(IS[,"end"])
 
