@@ -174,5 +174,7 @@ several directories and files will be created during the execution and they will
 
 ```
 
+[_In memoriam_ Alexi Laiho](https://www.metal-archives.com/artists/Alexi_Laiho)
+
 [ASCII Art Credits: David Palmer](http://www.ascii-art.de/ascii/s/scythe.txt)
 
