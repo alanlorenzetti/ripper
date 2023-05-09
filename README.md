@@ -161,6 +161,8 @@ NC_001869.1 artemis mobile_genetic_element  1718    5019    .   -   .   ID=GenBa
 
 several directories and files will be created during the execution and they will be placed majorly in "yourDirectory" and "misc".  
 
+## Citation
+
 If you use the content of this repository, please, reference the following study:  
 
 <a href="https://doi.org/10.1128/msystems.00816-22">Lorenzetti, A.P.R., Kusebauch, U., Zaramela, L.S., Wu, W-J., de Almeida, J.P.P., Turkarslan, S., de Lomana, A.L.G., Gomes-Filho, J.V., Vêncio, R.Z.N., Moritz, R.L., Koide, T., and Baliga, N.S. (2023). A Genome-Scale Atlas Reveals Complex Interplay of Transcription and Translation in an Archaeon. <i>mSystems</i>, e00816-22.</a>
